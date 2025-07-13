@@ -4,17 +4,19 @@ import { getURL } from '@/utils/helpers';
 import '@/styles/main.css';
 import { PHProvider } from './providers';
 import { ThemeProvider } from '@/components/landing/theme-provider';
-import dynamic from 'next/dynamic';
 import { Toaster } from '@/components/ui/toaster';
 import PostHogPageViewWrapper from '@/components/misc/PostHogPageViewWrapper';
-
+import { Navbar } from '@/components/landing/Navbar';
+import { Footer } from '@/components/landing/Footer';
+import { ScrollToTop } from '@/components/landing/ScrollToTop';
+import { createClient } from '@/utils/supabase/server';
 
 const meta = {
-  title: 'Next.js Subscription Starter',
-  description: 'Brought to you by Vercel, Stripe, and Supabase.',
-  cardImage: '/og.png',
+  title: "GoLet.ie | Ireland's First Scam-Free Rental Platform",
+  description: "Ireland's first rental platform with Scam and Deposit protection, in-app messaging, tenant profiles, ID verification, and a fair queueing system.",
+  cardImage: '/og_cozy_studio.png',
   robots: 'follow, index',
-  favicon: '/favicon.ico',
+  favicon: '/golet-app.png',
   url: getURL()
 };
 
@@ -50,18 +52,27 @@ export async function generateMetadata(): Promise<Metadata> {
 }
 
 export default async function RootLayout({ children }: PropsWithChildren) {
+  // Get the user data for the Navbar
+  const supabase = await createClient();
+  const {
+    data: { user }
+  } = await supabase.auth.getUser();
+
   return (
     <html lang="en">
       <ThemeProvider>
         <PHProvider>
           <body>
             <PostHogPageViewWrapper />
+            <Navbar user={user} />
             <main
               id="skip"
               className="min-h-[calc(100dvh-4rem)] md:min-h[calc(100dvh-5rem)]"
             >
               {children}
             </main>
+            <Footer />
+            <ScrollToTop />
             <Toaster />
           </body>
         </PHProvider>
