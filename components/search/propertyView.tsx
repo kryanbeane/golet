@@ -27,6 +27,7 @@ import { useState, useEffect } from "react"
 import { createClient } from "@/utils/supabase/client"
 import { createApiClient } from "@/utils/supabase/api"
 import { useToast } from "@/components/ui/use-toast"
+import { useAuth } from "@/components/providers/AuthProvider"
 import ApplicationDialog from "@/components/misc/ApplicationDialog"
 import WithdrawConfirmationDialog from "@/components/misc/WithdrawConfirmationDialog"
 
@@ -42,10 +43,12 @@ export default function PropertyView({ selectedProperty, onMediaClick }: Propert
   const [isWithdrawing, setIsWithdrawing] = useState(false);
   const [userApplication, setUserApplication] = useState<any>(null);
   const [isCheckingApplication, setIsCheckingApplication] = useState(false);
-  const [user, setUser] = useState<any>(null);
   const [likedListings, setLikedListings] = useState<Set<string>>(new Set());
   const [likingListing, setLikingListing] = useState<string | null>(null);
   const { toast } = useToast();
+  
+  // Get user from AuthProvider context at the top level
+  const { user } = useAuth();
 
   // Check if user is authenticated and has already applied to this property
   useEffect(() => {
@@ -56,11 +59,7 @@ export default function PropertyView({ selectedProperty, onMediaClick }: Propert
       try {
         const supabase = createClient();
         
-        // First check if user is authenticated
-        const { data: { user }, error: userError } = await supabase.auth.getUser();
-        setUser(user);
-        
-        if (userError || !user) {
+        if (!user) {
           // User is not authenticated, don't check for applications
           setIsCheckingApplication(false);
           return;
@@ -68,7 +67,7 @@ export default function PropertyView({ selectedProperty, onMediaClick }: Propert
         
         // User is authenticated, check for existing application
         const api = createApiClient(supabase);
-        const { hasApplied, application } = await api.checkUserApplication(selectedProperty.id);
+        const { hasApplied, application } = await api.checkUserApplication(selectedProperty.id, user);
         setUserApplication(application);
       } catch (error) {
         console.error('Error checking user and application:', error);
@@ -86,7 +85,6 @@ export default function PropertyView({ selectedProperty, onMediaClick }: Propert
       try {
         const supabase = createClient();
         
-        const { data: { user } } = await supabase.auth.getUser();
         if (user) {
           const { data: userData } = await supabase
             .from('users')
@@ -117,7 +115,7 @@ export default function PropertyView({ selectedProperty, onMediaClick }: Propert
       const supabase = createClient();
       const api = createApiClient(supabase);
       
-      const result = await api.toggleLikeListing(listingId);
+      const result = await api.toggleLikeListing(listingId, user);
       
       if (result.success) {
         setLikedListings(prev => {
@@ -157,7 +155,7 @@ export default function PropertyView({ selectedProperty, onMediaClick }: Propert
     try {
       const supabase = createClient();
       const api = createApiClient(supabase);
-      await api.applyToProperty(selectedProperty.id, notes);
+      await api.applyToProperty(selectedProperty.id, notes, user);
       
       // Check if this was a re-application
       const isReapplication = userApplication && userApplication.status !== 'pending';
@@ -171,7 +169,7 @@ export default function PropertyView({ selectedProperty, onMediaClick }: Propert
       });
       
       // Refresh application status
-      const { hasApplied, application } = await api.checkUserApplication(selectedProperty.id);
+      const { hasApplied, application } = await api.checkUserApplication(selectedProperty.id, user);
       setUserApplication(application);
     } catch (error) {
       console.error('Error applying:', error);
