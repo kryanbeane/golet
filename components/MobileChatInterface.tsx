@@ -391,11 +391,6 @@ export default function MobileChatInterface({ onUnreadCountChange }: MobileChatI
         [applicationId]: ''
       }))
 
-      toast({
-        title: "Message Sent",
-        description: "Your message has been sent successfully.",
-      })
-
     } catch (error) {
       console.error('Error sending message:', error)
       toast({

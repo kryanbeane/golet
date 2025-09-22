@@ -360,7 +360,7 @@ export default function PropertyView({ selectedProperty, onMediaClick }: Propert
   }
 
   return (
-    <div className="w-full overflow-y-auto">
+    <div className="w-full h-full overflow-y-auto">
       <div className="p-4 space-y-4">
         {/* Media Carousel */}
         {mediaUrls.length > 0 && (

@@ -1308,13 +1308,18 @@ export default function Component({
       {/* Media Modal */}
       <Dialog open={mediaModal.isOpen} onOpenChange={closeMediaModal}>
         <DialogContent className="max-w-4xl w-full h-[90vh] p-0 bg-transparent border-0 shadow-none rounded-lg overflow-hidden">
-          <DialogTitle className="text-white bg-black/50 px-3 py-1 rounded absolute top-4 left-4 z-10">
+          <DialogHeader className="sr-only">
+            <DialogTitle>
+              Property Media - {mediaModal.currentIndex + 1} of {mediaModal.media.length}
+            </DialogTitle>
+            <DialogDescription>
+              View property images and videos
+            </DialogDescription>
+          </DialogHeader>
+          
+          <div className="text-white bg-black/50 px-3 py-1 rounded absolute top-4 left-4 z-10 text-sm">
             Property Media - {mediaModal.currentIndex + 1} of {mediaModal.media.length}
-          </DialogTitle>
-
-          <DialogDescription className="sr-only">
-            View property images and videos
-          </DialogDescription>
+          </div>
 
           <Button
             variant="ghost"

@@ -5,11 +5,12 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Checkbox } from "@/components/ui/checkbox"
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog"
+import { Sheet, SheetContent, SheetDescription, SheetFooter, SheetHeader, SheetTitle } from "@/components/ui/sheet"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
 import { useToast } from "@/components/ui/use-toast"
-import { 
+import {
   FileText,
   Image as ImageIcon,
   CreditCard,
@@ -96,13 +97,25 @@ export function DocumentSelectionDialog({
 }: DocumentSelectionDialogProps) {
   const { toast } = useToast()
   const { user } = useAuth()
-  
+
   const [userDocuments, setUserDocuments] = useState<StoredDocument[]>([])
   const [selectedDocuments, setSelectedDocuments] = useState<Set<string>>(new Set())
   const [loadingDocuments, setLoadingDocuments] = useState(false)
   const [applicationData, setApplicationData] = useState<ApplicationData>({
     message: ""
   })
+  const [isMobile, setIsMobile] = useState(false)
+
+  // Check if mobile
+  useEffect(() => {
+    const checkMobile = () => {
+      setIsMobile(window.innerWidth < 768)
+    }
+
+    checkMobile()
+    window.addEventListener('resize', checkMobile)
+    return () => window.removeEventListener('resize', checkMobile)
+  }, [])
 
   // Load user's documents when dialog opens
   useEffect(() => {
@@ -113,7 +126,7 @@ export function DocumentSelectionDialog({
 
   const loadUserDocuments = async () => {
     if (!user) return
-    
+
     setLoadingDocuments(true)
     try {
       const supabase = createClient()
@@ -181,7 +194,7 @@ export function DocumentSelectionDialog({
         const encodedMetadata = parts[1]
         const metadataString = atob(encodedMetadata)
         const metadata = JSON.parse(metadataString)
-        
+
         return {
           type: metadata.document_type as DocumentType,
           name: metadata.custom_name,
@@ -194,7 +207,7 @@ export function DocumentSelectionDialog({
         console.error('Failed to parse metadata from filename:', error)
       }
     }
-    
+
     // Try to get from Supabase metadata (legacy)
     if (document.metadata?.document_type && document.metadata?.custom_name) {
       const size = document.metadata.encrypted === 'true' && document.metadata.original_size
@@ -263,7 +276,7 @@ export function DocumentSelectionDialog({
       if (!document) {
         throw new Error(`Document ${documentName} not found`)
       }
-      
+
       const docInfo = getDocumentInfo(document)
       return {
         filename: document.name,
@@ -284,36 +297,223 @@ export function DocumentSelectionDialog({
     onClose()
   }
 
+  // Mobile version using Sheet
+  if (isMobile) {
+    return (
+      <Sheet open={isOpen} onOpenChange={handleClose}>
+        <SheetContent side="bottom" className="h-[90vh] flex flex-col p-4 pt-6">
+          <SheetHeader className="pb-4 flex-shrink-0">
+            <SheetTitle className="text-lg font-semibold">
+              Apply to {propertyName}
+            </SheetTitle>
+            <SheetDescription className="text-sm">
+              Select documents to share with the landlord and add a personal message to strengthen your application.
+            </SheetDescription>
+          </SheetHeader>
+
+          <div className="flex-1 overflow-y-auto space-y-4 min-h-0">
+            {/* Application Form */}
+            <Card>
+              <CardHeader className="pb-3">
+                <CardTitle className="text-base">Application Details</CardTitle>
+                <CardDescription className="text-sm">
+                  Add a personal message for the landlord.
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-3">
+                <div className="space-y-2">
+                  <Label htmlFor="message" className="text-sm font-medium">Application Message</Label>
+                  <Textarea
+                    id="message"
+                    placeholder="Introduce yourself and explain why you'd be a great tenant..."
+                    value={applicationData.message}
+                    onChange={(e) => setApplicationData(prev => ({ ...prev, message: e.target.value }))}
+                    rows={3}
+                    className="text-sm"
+                    disabled={loading}
+                  />
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Document Selection */}
+            <Card>
+              <CardHeader className="pb-3">
+                <div className="flex flex-col gap-2">
+                  <div>
+                    <CardTitle className="text-base">Select Documents to Share</CardTitle>
+                    <CardDescription className="text-sm">
+                      Choose which documents you want to share with the landlord.
+                    </CardDescription>
+                  </div>
+                  {selectedDocuments.size > 0 && (
+                    <div className="text-sm text-muted-foreground">
+                      {selectedDocuments.size} document{selectedDocuments.size !== 1 ? 's' : ''} selected
+                    </div>
+                  )}
+                </div>
+              </CardHeader>
+              <CardContent>
+                {loadingDocuments ? (
+                  <div className="flex items-center justify-center py-8">
+                    <Loader2 className="h-6 w-6 animate-spin text-gray-400" />
+                    <span className="ml-2 text-gray-600">Loading your documents...</span>
+                  </div>
+                ) : userDocuments.length === 0 ? (
+                  <div className="text-center py-8">
+                    <div className="bg-blue-50 border border-blue-200 rounded-lg p-6">
+                      <div className="bg-blue-100 w-12 h-12 rounded-full flex items-center justify-center mx-auto mb-3">
+                        <Upload className="h-6 w-6 text-blue-600" />
+                      </div>
+                      <h3 className="text-base font-semibold text-gray-900 mb-2">No Documents Available</h3>
+                      <p className="text-sm text-gray-600 mb-4">
+                        You haven't uploaded any documents yet. Please upload documents in your profile.
+                      </p>
+                      <Link href="/account/profile">
+                        <Button size="sm" className="bg-blue-600 hover:bg-blue-700 text-white">
+                          <ExternalLink className="h-4 w-4 mr-2" />
+                          Go to Profile
+                        </Button>
+                      </Link>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="space-y-3">
+                    {userDocuments.map((document) => {
+                      const docInfo = getDocumentInfo(document)
+                      const IconComponent = getDocumentIcon(docInfo.type)
+                      const isSelected = selectedDocuments.has(document.name)
+
+                      return (
+                        <div
+                          key={document.id}
+                          className={`flex items-center space-x-3 p-3 border rounded-lg transition-colors ${isSelected
+                            ? 'border-blue-200 bg-blue-50'
+                            : 'border-gray-200 hover:bg-gray-50'
+                            }`}
+                        >
+                          <Checkbox
+                            id={document.name}
+                            checked={isSelected}
+                            onCheckedChange={(checked) => handleDocumentToggle(document.name, checked as boolean)}
+                            disabled={loading}
+                          />
+
+                          <div className="bg-gray-100 p-2 rounded-lg">
+                            <IconComponent className="h-4 w-4 text-gray-600" />
+                          </div>
+
+                          <div className="flex-1 min-w-0">
+                            <div className="flex items-center gap-2">
+                              <Label
+                                htmlFor={document.name}
+                                className="font-medium text-gray-900 cursor-pointer text-sm truncate"
+                              >
+                                {docInfo.name}
+                              </Label>
+                              {docInfo.encrypted && (
+                                <div className="flex items-center gap-1 px-2 py-1 bg-green-100 text-green-700 rounded-full text-xs">
+                                  <ShieldCheck className="h-3 w-3" />
+                                  <span>Encrypted</span>
+                                </div>
+                              )}
+                            </div>
+                            <div className="text-xs text-gray-500">
+                              <p>{documentHelpers.getDocumentTypeLabel(docInfo.type)} • {documentHelpers.formatFileSize(docInfo.size)}</p>
+                            </div>
+                          </div>
+                        </div>
+                      )
+                    })}
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+
+            {/* Security Notice */}
+            <div className="bg-green-50 border border-green-200 rounded-lg p-3">
+              <div className="flex items-start gap-3">
+                <div className="bg-green-100 p-2 rounded-full">
+                  <ShieldCheck className="h-4 w-4 text-green-600" />
+                </div>
+                <div>
+                  <h4 className="font-medium text-green-900 text-sm">Your Documents Stay Secure</h4>
+                  <p className="text-xs text-green-700 mt-1">
+                    All shared documents remain encrypted and can only be accessed by the landlord for this specific application.
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <SheetFooter className="pt-4 border-t flex-shrink-0">
+            <div className="flex flex-col gap-2 w-full">
+              <Button
+                onClick={handleSubmit}
+                disabled={loading || !applicationData.message.trim()}
+                className="w-full"
+              >
+                {loading ? (
+                  <>
+                    <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                    Submitting Application...
+                  </>
+                ) : (
+                  <>
+                    Submit Application
+                    {selectedDocuments.size > 0 && (
+                      <span className="ml-1">({selectedDocuments.size} document{selectedDocuments.size !== 1 ? 's' : ''})</span>
+                    )}
+                  </>
+                )}
+              </Button>
+              <Button
+                variant="outline"
+                onClick={handleClose}
+                disabled={loading}
+                className="w-full"
+              >
+                Cancel
+              </Button>
+            </div>
+          </SheetFooter>
+        </SheetContent>
+      </Sheet>
+    )
+  }
+
+  // Desktop version using Dialog
   return (
     <Dialog open={isOpen} onOpenChange={handleClose}>
       <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
-        <DialogHeader>
+        <DialogHeader className="pb-4">
           <DialogTitle className="text-xl font-semibold">
             Apply to {propertyName}
           </DialogTitle>
-          <DialogDescription>
+          <DialogDescription className="text-sm">
             Select documents to share with the landlord and add a personal message to strengthen your application.
           </DialogDescription>
         </DialogHeader>
 
-        <div className="space-y-6">
+        <div className="space-y-4 sm:space-y-6">
           {/* Application Form */}
           <Card>
-            <CardHeader>
-              <CardTitle className="text-lg">Application Details</CardTitle>
-              <CardDescription>
+            <CardHeader className="pb-3">
+              <CardTitle className="text-base sm:text-lg">Application Details</CardTitle>
+              <CardDescription className="text-sm">
                 Add a personal message for the landlord.
               </CardDescription>
             </CardHeader>
-            <CardContent className="space-y-4">
+            <CardContent className="space-y-3">
               <div className="space-y-2">
-                <Label htmlFor="message">Application Message</Label>
+                <Label htmlFor="message" className="text-sm font-medium">Application Message</Label>
                 <Textarea
                   id="message"
                   placeholder="Introduce yourself and explain why you'd be a great tenant. Include any additional information you'd like to share..."
                   value={applicationData.message}
                   onChange={(e) => setApplicationData(prev => ({ ...prev, message: e.target.value }))}
-                  rows={4}
+                  rows={3}
+                  className="text-sm"
                   disabled={loading}
                 />
               </div>
@@ -351,7 +551,7 @@ export function DocumentSelectionDialog({
                     </div>
                     <h3 className="text-lg font-semibold text-gray-900 mb-2">No Documents Available</h3>
                     <p className="text-gray-600 mb-6 max-w-md mx-auto">
-                      You haven't uploaded any documents yet. Please upload documents like proof of employment, 
+                      You haven't uploaded any documents yet. Please upload documents like proof of employment,
                       payslips, or references in your profile to strengthen your application.
                     </p>
                     <Link href="/account/profile">
@@ -368,15 +568,14 @@ export function DocumentSelectionDialog({
                     const docInfo = getDocumentInfo(document)
                     const IconComponent = getDocumentIcon(docInfo.type)
                     const isSelected = selectedDocuments.has(document.name)
-                    
+
                     return (
                       <div
                         key={document.id}
-                        className={`flex items-center space-x-3 p-4 border rounded-lg transition-colors ${
-                          isSelected 
-                            ? 'border-blue-200 bg-blue-50' 
-                            : 'border-gray-200 hover:bg-gray-50'
-                        }`}
+                        className={`flex items-center space-x-3 p-4 border rounded-lg transition-colors ${isSelected
+                          ? 'border-blue-200 bg-blue-50'
+                          : 'border-gray-200 hover:bg-gray-50'
+                          }`}
                       >
                         <Checkbox
                           id={document.name}
@@ -384,15 +583,15 @@ export function DocumentSelectionDialog({
                           onCheckedChange={(checked) => handleDocumentToggle(document.name, checked as boolean)}
                           disabled={loading}
                         />
-                        
+
                         <div className="bg-gray-100 p-2 rounded-lg">
                           <IconComponent className="h-4 w-4 text-gray-600" />
                         </div>
-                        
+
                         <div className="flex-1">
                           <div className="flex items-center gap-2">
-                            <Label 
-                              htmlFor={document.name} 
+                            <Label
+                              htmlFor={document.name}
                               className="font-medium text-gray-900 cursor-pointer"
                             >
                               {docInfo.name}
@@ -428,7 +627,7 @@ export function DocumentSelectionDialog({
               <div>
                 <h4 className="font-medium text-green-900">Your Documents Stay Secure</h4>
                 <p className="text-sm text-green-700 mt-1">
-                  All shared documents remain encrypted and can only be accessed by the landlord for this specific application. 
+                  All shared documents remain encrypted and can only be accessed by the landlord for this specific application.
                   Access automatically expires after 30 days.
                 </p>
               </div>
