@@ -41,14 +41,15 @@ npm run dev
 
 * Privacy Policy and terms of conditions
 
-NOTIFICATIONS REFRESH
-MESSAGES what ones are read á
-make notifications and messages dropdowns bigger
-Cant clear indivitaul notifications anymore
 
-Messages notification takes time or need refresh
+chat notifications and unread bold chat tab
+
+Chat small screens, 
+
+Mobile view fixes across all app
 
 TEST FILTERS AND SEARCH THOROUGHLY
+
 
 MOBILE ISSUES 
 Clicking on map with no property selected error Mobile Issue
@@ -58,8 +59,6 @@ mobile going to view property from management dashboard
 
 ### MVP Features
 
-#### WIP - Dominik
-ID verification
 
 TODO
 

@@ -82,11 +82,21 @@ export function EnhancedAuthForm({ state }: { state: AuthState }) {
           if (result && result.error) {
             // Handle API-level errors (like user already exists)
             console.log('Signup error from API:', result.error)
-            toast({
-              title: 'Signup Error',
-              description: result.error.message,
-              variant: 'destructive',
-            })
+            
+            if (result.error.code === 'user_already_exists') {
+              toast({
+                title: 'Account Already Exists',
+                description: 'This email is already registered. Redirecting to email verification...',
+              })
+              // Switch directly to email verification for existing users
+              setAuthState(AuthState.EmailVerification)
+            } else {
+              toast({
+                title: 'Signup Error',
+                description: result.error.message,
+                variant: 'destructive',
+              })
+            }
           } else if (result && result.user) {
             // Successful signup
             console.log('Signup successful, proceeding to email verification')
@@ -136,11 +146,23 @@ export function EnhancedAuthForm({ state }: { state: AuthState }) {
           router.refresh()
         } catch (e) {
           if (e instanceof Error) {
-            toast({
-              title: "Sign In Error",
-              description: e.message,
-              variant: "destructive",
-            })
+            // Check if the error is about unconfirmed email
+            if ((e as any).code === 'email_not_confirmed' || 
+                e.message.includes('Email not confirmed') || 
+                e.message.includes('verify your email')) {
+              toast({
+                title: "Email Not Verified",
+                description: "Please check your email and complete verification to sign in.",
+              })
+              // Switch to email verification state
+              setAuthState(AuthState.EmailVerification)
+            } else {
+              toast({
+                title: "Sign In Error",
+                description: e.message,
+                variant: "destructive",
+              })
+            }
           }
         }
         setLoading(false)
@@ -294,7 +316,7 @@ export function EnhancedAuthForm({ state }: { state: AuthState }) {
   }
 
   return (
-    <Card className="w-full max-w-md">
+    <Card className="w-full max-w-md mx-auto">
       <form onSubmit={(e) => {
         e.preventDefault();
         currState.onSubmit();
