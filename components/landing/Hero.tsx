@@ -9,6 +9,7 @@ import { createApiClient } from '@/utils/supabase/api';
 import ProfileCompletionDialog from '@/components/misc/ProfileCompletionDialog';
 import { SearchFilters } from '@/components/search/AdvancedSearchFilters';
 import { parseNaturalLanguageQuery } from '@/components/search/AISearchLogic';
+import { Search, Home, ArrowRight } from 'lucide-react';
 
 export const Hero = ({ user }: { user: User | null }) => {
   const router = useRouter();
@@ -82,7 +83,7 @@ export const Hero = ({ user }: { user: User | null }) => {
     <section
       className="
         container grid lg:grid-cols-2 place-items-center py-20 md:py-32 gap-10
-        lg:bg-[url('/hero-bg.png')] lg:bg-contain lg:bg-no-repeat lg:bg-center
+        lg:bg-[url('/Hero-bg.png')] lg:bg-contain lg:bg-no-repeat lg:bg-center
       "
     >
       <div className="flex flex-col items-center text-center space-y-6 lg:items-start lg:text-start">

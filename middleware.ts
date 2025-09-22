@@ -19,8 +19,9 @@ export async function middleware(request: NextRequest) {
     return;
   }
 
-  // Only update session for pages that actually need authentication
-  const authRequiredPaths = [
+  // Update session for pages that need authentication or check user status
+  const authPaths = [
+    '/',  // Home page needs to check user status for Hero component
     '/dashboard',
     '/applications',
     '/listroom',
@@ -30,9 +31,12 @@ export async function middleware(request: NextRequest) {
     '/profile'
   ];
 
-  const needsAuth = authRequiredPaths.some(path => pathname.startsWith(path));
+  // Check if the current path needs authentication handling
+  const needsAuthHandling = authPaths.some(path => 
+    path === '/' ? pathname === '/' : pathname.startsWith(path)
+  );
   
-  if (needsAuth) {
+  if (needsAuthHandling) {
     return await updateSession(request);
   }
 

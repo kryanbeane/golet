@@ -16,7 +16,7 @@ interface FAQProps {
 const FAQList: FAQProps[] = [
   {
     question: 'Is my information safe?',
-    answer: 'Absolutely, safety and privasy are our number one priority! Please donwload the attached policy here:',
+    answer: 'Absolutely! Safety and privacy are our number one priorities. All user data is encrypted, we verify every user\'s identity, and your personal information is never shared without your explicit consent. Our platform uses bank-level security to protect your data.',
     value: 'item-1'
   },
   {
