@@ -168,9 +168,9 @@ export const Navbar = () => {
                       ))}
                     </>
                   )}
-                  {user ? (
+                  {/* Mobile auth section - disabled for pre-launch */}
+                  {/* {user ? (
                     <div className="flex flex-col gap-2">
-                      {/* Mobile Notifications */}
                       <div className="flex justify-center gap-2 mb-2">
                         <NotificationBell />
                         <ChatNotificationBell />
@@ -199,7 +199,7 @@ export const Navbar = () => {
                     >
                       Sign In
                     </Button>
-                  )}
+                  )} */}
                 </nav>
               </SheetContent>
             </Sheet>
@@ -221,8 +221,10 @@ export const Navbar = () => {
           )} */}
 
 
+          {/* Desktop auth section - disabled for pre-launch */}
           <div className="hidden md:flex gap-2">
-            {user ? (
+            {/* Coming soon - auth functionality will be enabled at launch */}
+            {/* {user ? (
               <div className="flex items-center gap-2">
                 <NotificationBell />
                 <ChatNotificationBell />
@@ -249,7 +251,7 @@ export const Navbar = () => {
               >
                 Sign In
               </Button>
-            )}
+            )} */}
             {/* <ModeToggle /> */}
           </div>
         </NavigationMenuList>

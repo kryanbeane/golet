@@ -20,77 +20,47 @@ export const Footer = () => {
         </div>
 
         <div className="flex flex-col gap-2">
-          <h3 className="font-bold text-lg">Follow US</h3>
-          <div>
+          <h3 className="font-bold text-lg">Follow Us</h3>
+          <div className="flex gap-3">
             <a
               rel="noreferrer noopener"
-              href="#"
-              className="opacity-60 hover:opacity-100"
+              href="https://instagram.com" // Update with actual Instagram URL
+              target="_blank"
+              className="opacity-60 hover:opacity-100 flex items-center gap-2"
             >
-              <Instagram />
-            </a>
-          </div>
-
-          {/* <div>
-            <a
-              rel="noreferrer noopener"
-              href="#"
-              className="opacity-60 hover:opacity-100"
-            >
-              Twitter
-            </a>
-          </div>
-
-          <div>
-            <a
-              rel="noreferrer noopener"
-              href="#"
-              className="opacity-60 hover:opacity-100"
-            >
-              Dribbble
-            </a>
-          </div> */}
-        </div>
-
-        <div className="flex flex-col gap-2">
-          <h3 className="font-bold text-lg">Platforms</h3>
-          <div>
-            <a
-              rel="noreferrer noopener"
-              href="#"
-              className="opacity-60 hover:opacity-100"
-            >
-              Web
-            </a>
-          </div>
-
-          <div>
-            <a
-              rel="noreferrer noopener"
-              href="#"
-              className="opacity-60 hover:opacity-100"
-            >
-              Mobile
-            </a>
-          </div>
-
-          <div>
-            <a
-              rel="noreferrer noopener"
-              href="#"
-              className="opacity-60 hover:opacity-100"
-            >
-              Desktop
+              <Instagram className="h-5 w-5" />
+              <span className="text-sm">Instagram</span>
             </a>
           </div>
         </div>
 
         <div className="flex flex-col gap-2">
-          <h3 className="font-bold text-lg">About</h3>
+          <h3 className="font-bold text-lg">Coming Soon</h3>
+          <div>
+            <span className="opacity-60 text-sm">
+              Web Platform
+            </span>
+          </div>
+
+          <div>
+            <span className="opacity-60 text-sm">
+              Mobile App (iOS)
+            </span>
+          </div>
+
+          <div>
+            <span className="opacity-60 text-sm">
+              Mobile App (Android)
+            </span>
+          </div>
+        </div>
+
+        <div className="flex flex-col gap-2">
+          <h3 className="font-bold text-lg">Quick Links</h3>
           <div>
             <a
               rel="noreferrer noopener"
-              href="#"
+              href="/#features"
               className="opacity-60 hover:opacity-100"
             >
               Features
@@ -100,7 +70,7 @@ export const Footer = () => {
           <div>
             <a
               rel="noreferrer noopener"
-              href="#"
+              href="/#pricing"
               className="opacity-60 hover:opacity-100"
             >
               Pricing
@@ -110,7 +80,7 @@ export const Footer = () => {
           <div>
             <a
               rel="noreferrer noopener"
-              href="#"
+              href="/#faq"
               className="opacity-60 hover:opacity-100"
             >
               FAQ
@@ -154,14 +124,10 @@ export const Footer = () => {
 
       <section className="container pb-14 text-center">
         <h3>
-          &copy; 2025 {' '}
-          <a
-            rel="noreferrer noopener"
-            target="_blank"
-            className="text-primary transition-all border-primary hover:border-b-2"
-          >
+          &copy; 2024 {' '}
+          <span className="text-primary">
             GoLet.ie
-          </a>
+          </span>
         </h3>
       </section>
     </footer>

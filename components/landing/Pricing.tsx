@@ -161,16 +161,15 @@ export const Pricing = ({ user }: { user: User | null }) => {
   return (
     <section id="pricing" className="container py-24 sm:py-32">
       <h2 className="text-3xl md:text-4xl font-bold text-center">
-        Get
+        Simple,
         <span className="bg-gradient-to-b from-primary/60 to-primary text-transparent bg-clip-text">
           {' '}
-          Unlimited{' '}
+          Transparent{' '}
         </span>
-        Access
+        Pricing
       </h2>
       <h3 className="text-xl text-center text-muted-foreground pt-4 pb-8">
-        Lorem ipsum dolor sit amet consectetur adipisicing elit. Alias
-        reiciendis.
+        No hidden fees, no subscriptions. Just pay €5 to list your room for 30 days.
       </h3>
       <div className="grid md:grid-cols-2 lg:grid-cols-2 gap-8">
         {pricingList.map((pricing: PricingProps) => (
@@ -207,11 +206,20 @@ export const Pricing = ({ user }: { user: User | null }) => {
             <CardContent>
               <Button
                 className="w-full"
+                // Disabled for pre-launch
+                disabled={true}
+                variant="secondary"
+              >
+                Coming Soon
+              </Button>
+              {/* Original button - will be enabled at launch */}
+              {/* <Button
+                className="w-full"
                 onClick={() => handleClick(pricing)}
                 disabled={loading}
               >
                 {pricing.buttonText}
-              </Button>
+              </Button> */}
             </CardContent>
 
             <hr className="w-4/5 m-auto mb-4" />

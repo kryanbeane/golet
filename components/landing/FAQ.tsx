@@ -58,13 +58,9 @@ export const FAQ = () => {
 
       <h3 className="font-medium mt-4">
         Still have questions?{' '}
-        <a
-          rel="noreferrer noopener"
-          href="#"
-          className="text-primary transition-all border-primary hover:border-b-2"
-        >
-          Contact us
-        </a>
+        <span className="text-primary">
+          Stay tuned for updates!
+        </span>
       </h3>
     </section>
   );

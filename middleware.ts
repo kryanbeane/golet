@@ -1,9 +1,7 @@
-import { type NextRequest } from 'next/server';
+import { type NextRequest, NextResponse } from 'next/server';
 import { updateSession } from '@/utils/supabase/middleware';
 
 export async function middleware(request: NextRequest) {
-  // Only update session for pages that need authentication
-  // Skip static files, API routes, and other non-page requests
   const pathname = request.nextUrl.pathname;
   
   // Skip middleware for static files, API routes, and other non-essential paths
@@ -19,41 +17,43 @@ export async function middleware(request: NextRequest) {
     return;
   }
 
-  // Update session for pages that need authentication or check user status
-  const authPaths = [
-    '/',  // Home page needs to check user status for Hero component
-    '/dashboard',
-    '/applications',
-    '/listroom',
-    '/edit-listing',
-    '/chat',
-    '/account',
-    '/profile'
+  // PRE-LAUNCH MODE: Only allow access to the landing page
+  // All other routes are blocked until launch
+  const allowedPaths = [
+    '/',  // Landing page only
   ];
 
-  // Check if the current path needs authentication handling
-  const needsAuthHandling = authPaths.some(path => 
-    path === '/' ? pathname === '/' : pathname.startsWith(path)
-  );
+  const isAllowed = allowedPaths.includes(pathname);
   
-  if (needsAuthHandling) {
-    return await updateSession(request);
+  if (!isAllowed) {
+    // Redirect all non-allowed paths to the landing page
+    return NextResponse.redirect(new URL('/', request.url));
   }
 
-  // For other pages, just continue without auth check
+  // No authentication needed for the landing page in pre-launch mode
   return;
 }
 
 export const config = {
   matcher: [
     /*
-     * Match all request paths except:
+     * Match all request paths except for:
+     * - api (API routes)
      * - _next/static (static files)
      * - _next/image (image optimization files)
-     * - golet-app.png (favicon file)
-     * - images - .svg, .png, .jpg, .jpeg, .gif, .webp
-     * Feel free to modify this pattern to include more paths.
+     * - favicon.ico (favicon file)
+     * - public files (images, etc)
      */
-    '/((?!_next/static|_next/image|golet-app.png|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)'
+    '/((?!api|_next/static|_next/image|favicon.ico|.*\\.).*)',
+    '/search',
+    '/auth',
+    '/dashboard',
+    '/applications',
+    '/listroom',
+    '/chat',
+    '/account',
+    '/profile',
+    '/liked',
+    '/edit-listing'
   ]
 };

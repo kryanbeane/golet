@@ -103,8 +103,19 @@ export const Hero = ({ user }: { user: User | null }) => {
         We can't fix the housing crisis, but we can make renting safer. Ireland's first rental platform with Scam and Deposit protection, in-app messaging, tenant profiles, and a fair queueing system.
         </p>
 
-        <div className="flex flex-col w-full max-w-lg gap-2 md:flex-row md:items-center md:justify-start">
-          {/* Search bar */}
+        {/* Coming Soon - Search and Post Features */}
+        <div className="flex flex-col w-full max-w-lg gap-4 mt-8">
+          <div className="bg-muted/50 rounded-lg p-6 text-center">
+            <h3 className="text-lg font-semibold mb-2">Coming Soon!</h3>
+            <p className="text-muted-foreground">
+              We're working hard to bring you the safest rental platform in Ireland. 
+              Sign up for updates to be the first to know when we launch.
+            </p>
+          </div>
+        </div>
+
+        {/* Original search and signin features - kept for later use */}
+        {/* <div className="flex flex-col w-full max-w-lg gap-2 md:flex-row md:items-center md:justify-start">
           <div className="w-full">
             <Input 
               type="text" 
@@ -115,7 +126,6 @@ export const Hero = ({ user }: { user: User | null }) => {
               onKeyPress={handleKeyPress}
             />
           </div>
-          {/* Buttons row */}
           <div className="flex flex-row w-full gap-2 justify-center md:w-auto md:justify-start">
             <Button
               type="button"
@@ -141,7 +151,7 @@ export const Hero = ({ user }: { user: User | null }) => {
               )}
             </Button>
           </div>
-        </div>
+        </div> */}
       </div>
 
       {/* Hero cards sections */}
