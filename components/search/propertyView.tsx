@@ -326,11 +326,13 @@ export default function PropertyView({ selectedProperty, onMediaClick }: Propert
 
   const mediaUrls = getMediaUrls(selectedProperty)
 
-  const formatPropertyType = (type: string) => {
+  const formatPropertyType = (type: string | undefined | null) => {
+    if (!type || typeof type !== 'string') return 'Unknown'
     return type.charAt(0).toUpperCase() + type.slice(1)
   }
 
-  const formatRoomType = (type: string) => {
+  const formatRoomType = (type: string | undefined | null) => {
+    if (!type || typeof type !== 'string') return 'Unknown'
     return type.charAt(0).toUpperCase() + type.slice(1)
   }
 

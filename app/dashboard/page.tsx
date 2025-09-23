@@ -10,14 +10,14 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter }
 import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/components/ui/use-toast';
 import { useAuth } from '@/components/providers/AuthProvider';
-import { 
-  User, 
-  MapPin, 
-  Euro, 
-  Calendar, 
-  Clock, 
-  CheckCircle, 
-  XCircle, 
+import {
+  User,
+  MapPin,
+  Euro,
+  Calendar,
+  Clock,
+  CheckCircle,
+  XCircle,
   ArrowLeft,
   Users,
   Trash2,
@@ -63,7 +63,7 @@ export default function ApplicationsPage() {
   const [selectedListingForDelete, setSelectedListingForDelete] = useState<any>(null);
   const router = useRouter();
   const { toast } = useToast();
-  
+
   // Get user from AuthProvider context at the top level
   const { user } = useAuth();
 
@@ -78,7 +78,7 @@ export default function ApplicationsPage() {
         if (typeof window !== 'undefined') {
           const searchParams = new URLSearchParams(window.location.search);
           const paymentStatus = searchParams.get('payment');
-          
+
           if (paymentStatus === 'success' || paymentStatus === 'cancelled') {
             console.log('Returning from payment, not redirecting to auth - waiting for user state');
             // Don't return early, just skip the data fetching but don't redirect
@@ -86,7 +86,7 @@ export default function ApplicationsPage() {
             return;
           }
         }
-        
+
         // Only redirect to auth if we're not in a payment flow and payment processing is complete
         if (typeof window !== 'undefined' && paymentProcessingComplete && !isProcessingPayment) {
           const currentUrl = window.location.pathname + window.location.search;
@@ -147,12 +147,12 @@ export default function ApplicationsPage() {
       }
     } catch (error) {
       console.error('Error fetching data:', error);
-      
+
       // Set empty arrays to prevent UI issues
       setApplications([]);
       setOwnedListings([]);
       setLikedListings([]);
-      
+
       // Only show error toast if it's not an auth issue
       if (user) {
         toast({
@@ -179,46 +179,46 @@ export default function ApplicationsPage() {
   useEffect(() => {
     // Only run on client side
     if (typeof window === 'undefined') return;
-    
+
     console.log('Dashboard useEffect running, checking URL params...');
     console.log('Current URL:', window.location.href);
-    
+
     const searchParams = new URLSearchParams(window.location.search);
     const paymentStatus = searchParams.get('payment');
     const sessionId = searchParams.get('session_id');
     const paymentId = searchParams.get('payment_id');
-    
+
     console.log('URL params found:', { paymentStatus, sessionId, paymentId });
-    
+
     if (paymentStatus === 'success' && sessionId && paymentId) {
       console.log('Payment success detected, processing...');
-      
+
       // Set active tab to listings immediately
       setActiveTab('listings');
-      
+
       // Clean up URL params immediately to prevent redirect issues
       const newUrl = '/dashboard?tab=listings';
       console.log('Replacing URL with:', newUrl);
       window.history.replaceState({}, '', newUrl);
-      
+
       // Process payment verification
       processPaymentVerification(sessionId, paymentId);
-      
+
     } else if (paymentStatus === 'cancelled') {
       console.log('Payment cancelled detected');
-      
+
       // Set active tab to listings immediately
       setActiveTab('listings');
-      
+
       // Clean up URL params immediately
       const newUrl = '/dashboard?tab=listings';
       console.log('Replacing URL with:', newUrl);
       window.history.replaceState({}, '', newUrl);
-      
+
       // Mark payment processing as complete
       setPaymentProcessingComplete(true);
       setIsProcessingPayment(false);
-      
+
       toast({
         title: 'Payment Cancelled',
         description: 'Your payment was cancelled. You can try again anytime.',
@@ -232,13 +232,13 @@ export default function ApplicationsPage() {
       console.log('=== PROCESSING PAYMENT VERIFICATION ===');
       console.log('Session ID:', sessionId);
       console.log('Payment ID:', paymentId);
-      
+
       // Show loading state
       setIsProcessingPayment(true);
-      
+
       // Wait a moment for user state to potentially load
       await new Promise(resolve => setTimeout(resolve, 1000));
-      
+
       console.log('Calling payment status check API...');
       // Check payment status with Stripe
       const response = await fetch('/api/stripe/check-payment-status', {
@@ -262,31 +262,31 @@ export default function ApplicationsPage() {
 
       const result = await response.json();
       console.log('Payment status result:', result);
-      
+
       if (result.success && result.payment_status === 'paid') {
         console.log('Payment confirmed as successful');
-        
+
         // Show success message
         toast({
           title: 'Payment Successful! 🎉',
           description: 'Your listing is now active for 30 days. Refreshing your listings...',
           variant: 'default',
         });
-        
+
         // Mark payment processing as complete
         setPaymentProcessingComplete(true);
         setIsProcessingPayment(false);
-        
+
         // Simple refresh: force data reload
         console.log('Refreshing page data after successful payment...');
-        
+
         // Wait a moment for database to update
         setTimeout(async () => {
           console.log('Forcing data refresh...');
           await fetchAllData();
           setRefreshTrigger(prev => prev + 1);
         }, 2000);
-        
+
       } else {
         console.log('Payment not successful:', result);
         toast({
@@ -294,12 +294,12 @@ export default function ApplicationsPage() {
           description: result.message || 'Payment was not completed successfully. Please try again.',
           variant: 'destructive',
         });
-        
+
         // Mark payment processing as complete even if failed
         setPaymentProcessingComplete(true);
         setIsProcessingPayment(false);
       }
-      
+
     } catch (error) {
       console.error('Error processing payment verification:', error);
       toast({
@@ -307,7 +307,7 @@ export default function ApplicationsPage() {
         description: error instanceof Error ? error.message : 'Could not verify payment status. Please refresh the page.',
         variant: 'destructive',
       });
-      
+
       // Mark payment processing as complete even on error
       setPaymentProcessingComplete(true);
       setIsProcessingPayment(false);
@@ -318,7 +318,7 @@ export default function ApplicationsPage() {
     try {
       console.log('=== FETCHING OWNED LISTINGS ===');
       console.log('User ID:', userId);
-      
+
       // Ensure expired listings are marked before fetching
       try {
         await fetch('/api/listings/check-expired', { method: 'POST' })
@@ -347,7 +347,7 @@ export default function ApplicationsPage() {
               .select('id, full_name, verified')
               .eq('id', listing.user_id)
               .single();
-            
+
             return {
               ...listing,
               owner: ownerData || null
@@ -377,8 +377,8 @@ export default function ApplicationsPage() {
             const stats = statsData && statsData.length > 0 ? statsData[0] : null;
             return {
               ...listing,
-              applicants: { 
-                count: stats?.applicant_count || 0 
+              applicants: {
+                count: stats?.applicant_count || 0
               },
               views_count: stats?.views_count || listing.views_count || 0
             };
@@ -417,13 +417,13 @@ export default function ApplicationsPage() {
     try {
       const supabase = createClient();
       const api = createApiClient(supabase);
-      
+
       console.log('Dashboard: Withdrawing application with user:', user.id); // Debug log
       await api.withdrawApplication(applicationId, user);
 
-      setApplications(prev => 
-        prev.map(app => 
-          app.id === applicationId 
+      setApplications(prev =>
+        prev.map(app =>
+          app.id === applicationId
             ? { ...app, status: 'withdrawn' }
             : app
         )
@@ -434,7 +434,7 @@ export default function ApplicationsPage() {
         description: 'Your application has been withdrawn successfully.',
         variant: 'default',
       });
-      
+
       setShowWithdrawDialog(false);
       setSelectedApplication(null);
     } catch (error) {
@@ -532,14 +532,14 @@ export default function ApplicationsPage() {
   const [isProcessingPayment, setIsProcessingPayment] = useState(false);
   const [paymentProcessingComplete, setPaymentProcessingComplete] = useState(false);
   const [refreshTrigger, setRefreshTrigger] = useState(0);
-  
+
   useEffect(() => {
     if (typeof window !== 'undefined') {
       const searchParams = new URLSearchParams(window.location.search);
       const paymentStatus = searchParams.get('payment');
       const isPaymentFlow = paymentStatus === 'success' || paymentStatus === 'cancelled';
       setIsProcessingPayment(isPaymentFlow);
-      
+
       // If no payment params, mark processing as complete
       if (!isPaymentFlow) {
         setPaymentProcessingComplete(true);
@@ -573,7 +573,7 @@ export default function ApplicationsPage() {
                 {isProcessingPayment ? 'Processing Your Payment...' : 'Loading Your Dashboard'}
               </h3>
               <p className="text-gray-600 mb-4">
-                {isProcessingPayment 
+                {isProcessingPayment
                   ? 'We\'re confirming your payment with Stripe and updating your listing status. This usually takes just a few seconds.'
                   : 'Gathering your applications, listings, and favorites...'
                 }
@@ -715,32 +715,32 @@ export default function ApplicationsPage() {
         {/* Main Content Tabs - Mobile Optimized */}
         <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4 sm:space-y-6">
           <TabsList className="grid w-full grid-cols-4 h-auto p-1 bg-white/80 backdrop-blur-sm shadow-lg">
-            <TabsTrigger 
-              value="overview" 
+            <TabsTrigger
+              value="overview"
               className="flex flex-col sm:flex-row items-center gap-1 sm:gap-2 py-2 sm:py-3 px-1 sm:px-4 data-[state=active]:bg-gradient-to-r data-[state=active]:from-blue-500 data-[state=active]:to-blue-600 data-[state=active]:text-white data-[state=active]:shadow-md transition-all text-xs sm:text-sm"
             >
               <LayoutGrid className="h-3 w-3 sm:h-4 sm:w-4" />
               <span className="hidden sm:inline">Overview</span>
               <span className="sm:hidden">View</span>
             </TabsTrigger>
-            <TabsTrigger 
-              value="applications" 
+            <TabsTrigger
+              value="applications"
               className="flex flex-col sm:flex-row items-center gap-1 sm:gap-2 py-2 sm:py-3 px-1 sm:px-4 data-[state=active]:bg-gradient-to-r data-[state=active]:from-blue-500 data-[state=active]:to-blue-600 data-[state=active]:text-white data-[state=active]:shadow-md transition-all text-xs sm:text-sm"
             >
               <FileSearch className="h-3 w-3 sm:h-4 sm:w-4" />
               <span className="hidden sm:inline">Applications</span>
               <span className="sm:hidden">Apps</span>
             </TabsTrigger>
-            <TabsTrigger 
-              value="listings" 
+            <TabsTrigger
+              value="listings"
               className="flex flex-col sm:flex-row items-center gap-1 sm:gap-2 py-2 sm:py-3 px-1 sm:px-4 data-[state=active]:bg-gradient-to-r data-[state=active]:from-blue-500 data-[state=active]:to-blue-600 data-[state=active]:text-white data-[state=active]:shadow-md transition-all text-xs sm:text-sm"
             >
               <Building2 className="h-3 w-3 sm:h-4 sm:w-4" />
               <span className="hidden sm:inline">Listings</span>
               <span className="sm:hidden">List</span>
             </TabsTrigger>
-            <TabsTrigger 
-              value="favorites" 
+            <TabsTrigger
+              value="favorites"
               className="flex flex-col sm:flex-row items-center gap-1 sm:gap-2 py-2 sm:py-3 px-1 sm:px-4 data-[state=active]:bg-gradient-to-r data-[state=active]:from-blue-500 data-[state=active]:to-blue-600 data-[state=active]:text-white data-[state=active]:shadow-md transition-all text-xs sm:text-sm"
             >
               <Heart className="h-3 w-3 sm:h-4 sm:w-4" />
@@ -779,7 +779,7 @@ export default function ApplicationsPage() {
                     <div className="space-y-3">
                       {applications.slice(0, 3).map((application) => (
                         <div key={application.id} className="flex items-center gap-4 p-4 bg-white rounded-lg border border-gray-200 hover:border-blue-300 hover:shadow-md transition-all duration-200">
-                          {/* Property Image */}
+                          {/* Property Image - Same size as Favorites */}
                           <div className="relative w-16 h-16 flex-shrink-0 p-1">
                             <div className="relative w-full h-full rounded-lg overflow-hidden">
                               {application.listing?.images && application.listing.images.length > 0 ? (
@@ -809,27 +809,29 @@ export default function ApplicationsPage() {
                                 <span className="ml-1">{getStatusText(application.status)}</span>
                               </Badge>
                             </div>
-                            
+
                             <p className="text-xs text-gray-600 truncate mb-2">
-                              {application.listing?.property_address || 'Address not available'}
+                              {application.listing?.city || 'Location'}, {application.listing?.county || 'County'}
                             </p>
-                            
+
                             <div className="flex items-center gap-4 text-xs text-gray-500">
                               <div className="flex items-center gap-1">
                                 <Calendar className="h-3 w-3" />
                                 <span>{new Date(application.created_at).toLocaleDateString()}</span>
                               </div>
-                              <div className="flex items-center gap-1">
-                                <Clock className="h-3 w-3" />
-                                <span>{new Date(application.created_at).toLocaleTimeString()}</span>
-                              </div>
+                              {application.status === 'pending' && application.position && (
+                                <div className="flex items-center gap-1 text-amber-600">
+                                  <Users className="h-3 w-3" />
+                                  <span>#{application.position}</span>
+                                </div>
+                              )}
                             </div>
                           </div>
 
                           {/* Actions */}
                           <div className="flex flex-col gap-2 flex-shrink-0">
-                            <Button 
-                              variant="outline" 
+                            <Button
+                              variant="outline"
                               size="sm"
                               className="text-xs px-3 py-1 h-8"
                               onClick={() => router.push(`/search?id=${application.listing?.id}&view=detailed`)}
@@ -837,8 +839,8 @@ export default function ApplicationsPage() {
                               View
                             </Button>
                             {application.status === 'pending' && (
-                              <Button 
-                                variant="destructive" 
+                              <Button
+                                variant="destructive"
                                 size="sm"
                                 className="text-xs px-3 py-1 h-8"
                                 onClick={() => openWithdrawDialog(application)}
@@ -847,13 +849,11 @@ export default function ApplicationsPage() {
                               </Button>
                             )}
                             {application.status === 'accepted' && (
-                              <Button 
-                                variant="outline" 
+                              <Button
+                                variant="outline"
                                 size="sm"
                                 className="text-xs px-3 py-1 h-8"
                                 onClick={() => {
-                                  // This will trigger the ChatTabs component to open
-                                  // We'll use a custom event to communicate between components
                                   window.dispatchEvent(new CustomEvent('openChat', {
                                     detail: { applicationId: application.id }
                                   }))
@@ -868,9 +868,9 @@ export default function ApplicationsPage() {
                       ))}
                       {applications.length > 3 && (
                         <div className="pt-2 border-t border-gray-100">
-                          <Button 
-                            variant="outline" 
-                            size="sm" 
+                          <Button
+                            variant="outline"
+                            size="sm"
                             onClick={() => setActiveTab('applications')}
                             className="w-full text-sm"
                           >
@@ -909,7 +909,7 @@ export default function ApplicationsPage() {
                       {likedListings.slice(0, 3).map((listing) => {
                         const mediaUrls = getMediaUrls(listing);
                         const firstImage = mediaUrls.length > 0 ? mediaUrls[0].url : null;
-                        
+
                         return (
                           <div key={listing.id} className="flex items-center gap-4 p-4 bg-white rounded-lg border border-gray-200 hover:border-red-300 hover:shadow-md transition-all duration-200">
                             <div className="relative w-16 h-16 flex-shrink-0 p-1">
@@ -937,14 +937,14 @@ export default function ApplicationsPage() {
                                 {listing.property_address || 'Address not available'}
                               </p>
                               <p className="text-xs text-gray-500 flex items-center gap-1">
-                            
+
                                 € {listing.monthly_rent}/month
                               </p>
                             </div>
                             <div className="flex flex-col items-center gap-2 flex-shrink-0">
                               <Heart className="h-4 w-4 text-red-500 fill-current" />
-                              <Button 
-                                variant="outline" 
+                              <Button
+                                variant="outline"
                                 size="sm"
                                 className="text-xs px-3 py-1 h-8"
                                 onClick={() => router.push(`/search?id=${listing.id}&view=detailed`)}
@@ -957,9 +957,9 @@ export default function ApplicationsPage() {
                       })}
                       {likedListings.length > 3 && (
                         <div className="pt-2 border-t border-gray-100">
-                          <Button 
-                            variant="outline" 
-                            size="sm" 
+                          <Button
+                            variant="outline"
+                            size="sm"
                             onClick={() => setActiveTab('favorites')}
                             className="w-full text-sm"
                           >
@@ -978,7 +978,7 @@ export default function ApplicationsPage() {
           <TabsContent value="applications" className="space-y-6">
             <Card className="bg-white/80 backdrop-blur-sm border-0 shadow-xl">
               <CardHeader>
-                <div className="flex items-center justify-between">
+                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
                   <div>
                     <CardTitle className="flex items-center gap-2 text-xl">
                       <User className="h-5 w-5 text-blue-600" />
@@ -988,7 +988,7 @@ export default function ApplicationsPage() {
                       Complete list of your property applications
                     </CardDescription>
                   </div>
-                  <Button onClick={() => router.push('/search')} className="flex items-center gap-2">
+                  <Button onClick={() => router.push('/search')} className="flex items-center gap-2 w-full sm:w-auto">
                     <Plus className="h-4 w-4" />
                     Apply to Properties
                   </Button>
@@ -1002,7 +1002,7 @@ export default function ApplicationsPage() {
                     </div>
                     <h3 className="text-xl font-semibold mb-3 text-gray-900">No Applications Yet</h3>
                     <p className="text-gray-600 mb-6 max-w-md mx-auto">
-                      Start your property search and apply to places you'd love to live in. 
+                      Start your property search and apply to places you'd love to live in.
                       Your applications will appear here.
                     </p>
                     <Button onClick={() => router.push('/search')} size="lg">
@@ -1011,133 +1011,121 @@ export default function ApplicationsPage() {
                     </Button>
                   </div>
                 ) : (
-                  <div className="space-y-4">
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
                     {applications.map((application) => (
-                      <div key={application.id} className="bg-white rounded-xl border border-gray-200 hover:border-blue-300 hover:shadow-lg transition-all duration-300 overflow-hidden">
-                        <div className="flex">
-                          {/* Property Image */}
-                          <div className="w-48 flex-shrink-0 p-4">
-                            <div className="relative w-full h-32 rounded-lg overflow-hidden">
-                              {application.listing?.images && application.listing.images.length > 0 ? (
-                                <Image
-                                  src={application.listing.images[0]}
-                                  alt={application.listing.property_name}
-                                  fill
-                                  sizes="192px"
-                                  className="object-cover"
-                                />
-                              ) : (
-                                <div className="w-full h-full bg-gradient-to-br from-gray-100 to-gray-200 flex items-center justify-center rounded-lg">
-                                  <Building2 className="h-10 w-10 text-gray-400" />
-                                </div>
-                              )}
+                      <Card key={application.id} className="border shadow-md hover:shadow-lg transition-all duration-300 overflow-hidden">
+                        <div className="relative h-48">
+                          {application.listing?.images && application.listing.images.length > 0 ? (
+                            <Image
+                              src={application.listing.images[0]}
+                              alt={application.listing.property_name}
+                              fill
+                              sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+                              className="object-cover"
+                            />
+                          ) : (
+                            <div className="w-full h-full bg-gray-100 flex items-center justify-center">
+                              <Building2 className="h-12 w-12 text-gray-400" />
                             </div>
-                            
-                            {/* Status and Price Badges Below Image */}
-                            <div className="flex flex-col gap-2 mt-3">
-                              {/* Status Badge */}
-                              <Badge className={`${getStatusColor(application.status)} shadow-sm w-fit`}>
-                                {getStatusIcon(application.status)}
-                                <span className="ml-1 font-medium">{getStatusText(application.status)}</span>
+                          )}
+                          <div className="absolute top-3 right-3">
+                            <Badge className="bg-white/95 text-gray-800 font-semibold shadow-lg">
+                              €{application.listing?.monthly_rent}
+                            </Badge>
+                          </div>
+                          <div className="absolute top-3 left-3">
+                            <Badge className={`${getStatusColor(application.status)} shadow-lg`}>
+                              {getStatusIcon(application.status)}
+                              <span className="ml-1">{getStatusText(application.status)}</span>
+                            </Badge>
+                          </div>
+                          {application.status === 'pending' && application.position && (
+                            <div className="absolute bottom-3 left-3">
+                              <Badge variant="outline" className="bg-amber-50 text-amber-700 border-amber-200 shadow-lg">
+                                Position #{application.position}
                               </Badge>
-
-                              {/* Price Badge */}
-                              <div className="bg-white/95 backdrop-blur-sm px-3 py-1.5 rounded-full shadow-sm border border-gray-200 w-fit">
-                                <span className="text-sm font-bold text-gray-900">€{application.listing?.monthly_rent}</span>
-                                <span className="text-xs text-gray-600">/month</span>
-                              </div>
+                            </div>
+                          )}
+                        </div>
+                        <CardContent className="p-4">
+                          <h4 className="font-semibold text-lg mb-2 line-clamp-1 text-gray-900">
+                            {application.listing?.property_name || 'Property Name'}
+                          </h4>
+                          <p className="text-sm text-gray-600 flex items-center gap-2 mb-3">
+                            <MapPin className="h-4 w-4" />
+                            {application.listing?.city || 'Location'}, {application.listing?.county || 'County'}
+                          </p>
+                          <div className="flex items-center gap-4 text-xs text-gray-500 mb-3">
+                            <div className="flex items-center gap-1">
+                              <Calendar className="h-3 w-3" />
+                              <span>{new Date(application.created_at).toLocaleDateString()}</span>
+                            </div>
+                            <div className="flex items-center gap-1">
+                              <Clock className="h-3 w-3" />
+                              <span>{new Date(application.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
                             </div>
                           </div>
 
-                          {/* Application Details */}
-                          <div className="flex-1 p-6">
-                            <div className="flex items-start justify-between mb-4">
-                              <div className="flex-1">
-                                <h3 className="text-xl font-bold text-gray-900 mb-2">
-                                  {application.listing?.property_name || 'Property Name'}
-                                </h3>
-                                <div className="flex items-center gap-2 text-gray-600 mb-3">
-                                  <MapPin className="h-4 w-4 text-gray-500" />
-                                  <span className="text-sm">
-                                    {application.listing?.property_address || 'Address not available'}
-                                  </span>
-                                </div>
-                              </div>
+                          {/* Application Message Preview */}
+                          {application.message && (
+                            <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 mb-3">
+                              <p className="text-xs text-blue-800 line-clamp-2">{application.message}</p>
                             </div>
+                          )}
 
-                            {/* Application Info Grid */}
-                            <div className="grid grid-cols-2 lg:grid-cols-3 gap-4 mb-4">
-                              <div className="flex items-center gap-2 text-sm text-gray-600">
-                                <Calendar className="h-4 w-4 text-gray-500" />
-                                <span>Applied {new Date(application.created_at).toLocaleDateString()}</span>
-                              </div>
-                              <div className="flex items-center gap-2 text-sm text-gray-600">
-                                <Clock className="h-4 w-4 text-gray-500" />
-                                <span>{new Date(application.created_at).toLocaleTimeString()}</span>
-                              </div>
-                              {application.status === 'pending' && application.position && (
-                                <div className="flex items-center gap-2 text-sm text-amber-600">
-                                  <Users className="h-4 w-4" />
-                                  <span>Position #{application.position} in queue</span>
-                                </div>
-                              )}
-                            </div>
+                          {/* Action Buttons */}
+                          <div className="flex gap-2">
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={async () => {
+                                if (application.listing?.id) {
+                                  await trackListingView(application.listing.id);
+                                }
+                                router.push(`/search?id=${application.listing?.id}&view=detailed`);
+                              }}
+                              className="flex-1 text-xs sm:text-sm"
+                            >
+                              View
+                            </Button>
 
-                            {/* Application Message */}
-                            {application.message && (
-                              <div className="bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-200 rounded-lg p-4 mb-4">
-                                <div className="flex items-start gap-2">
-                                  <div className="w-2 h-2 bg-blue-500 rounded-full mt-2 flex-shrink-0"></div>
-                                  <div>
-                                    <p className="text-sm font-medium text-blue-900 mb-1">Your Application Message:</p>
-                                    <p className="text-sm text-blue-800 leading-relaxed">{application.message}</p>
-                                  </div>
-                                </div>
-                              </div>
+                            {application.status === 'pending' && (
+                              <Button
+                                variant="destructive"
+                                size="sm"
+                                onClick={() => openWithdrawDialog(application)}
+                                className="flex-1 text-xs sm:text-sm"
+                                disabled={withdrawingApplicationId === application.id}
+                              >
+                                {withdrawingApplicationId === application.id ? (
+                                  <>
+                                    <Loader2 className="h-3 w-3 animate-spin mr-1" />
+                                    Withdrawing
+                                  </>
+                                ) : (
+                                  'Withdraw'
+                                )}
+                              </Button>
                             )}
 
-                            {/* Action Buttons */}
-                            <div className="flex items-center gap-3">
+                            {application.status === 'accepted' && (
                               <Button
                                 variant="outline"
                                 size="sm"
-                                onClick={async () => {
-                                  if (application.listing?.id) {
-                                    await trackListingView(application.listing.id);
-                                  }
-                                  router.push(`/search?id=${application.listing?.id}&view=detailed`);
+                                onClick={() => {
+                                  window.dispatchEvent(new CustomEvent('openChat', {
+                                    detail: { applicationId: application.id }
+                                  }))
                                 }}
-                                className="flex items-center gap-2 hover:bg-blue-50 hover:border-blue-300"
+                                className="flex-1 text-xs sm:text-sm"
                               >
-                                <Eye className="h-4 w-4" />
-                                View Property
+                                <MessageSquare className="h-3 w-3 mr-1" />
+                                Chat
                               </Button>
-                              
-                              {application.status === 'pending' && (
-                                <Button
-                                  variant="outline"
-                                  size="sm"
-                                  onClick={() => openWithdrawDialog(application)}
-                                  className="flex items-center gap-2 text-red-600 hover:text-red-700 hover:bg-red-50 hover:border-red-300"
-                                  disabled={withdrawingApplicationId === application.id}
-                                >
-                                  {withdrawingApplicationId === application.id ? (
-                                    <>
-                                      <Loader2 className="h-4 w-4 animate-spin" />
-                                      Withdrawing...
-                                    </>
-                                  ) : (
-                                    <>
-                                      <Trash2 className="h-4 w-4" />
-                                      Withdraw Application
-                                    </>
-                                  )}
-                                </Button>
-                              )}
-                            </div>
+                            )}
                           </div>
-                        </div>
-                      </div>
+                        </CardContent>
+                      </Card>
                     ))}
                   </div>
                 )}
@@ -1149,7 +1137,7 @@ export default function ApplicationsPage() {
           <TabsContent value="listings" className="space-y-6">
             <Card className="bg-white/80 backdrop-blur-sm border-0 shadow-xl">
               <CardHeader>
-                <div className="flex items-center justify-between">
+                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
                   <div>
                     <CardTitle className="flex items-center gap-2 text-xl">
                       <Building2 className="h-5 w-5 text-purple-600" />
@@ -1159,7 +1147,7 @@ export default function ApplicationsPage() {
                       Properties you own and manage
                     </CardDescription>
                   </div>
-                  <Button onClick={() => router.push('/listroom')} className="flex items-center gap-2">
+                  <Button onClick={() => router.push('/listroom')} className="flex items-center gap-2 w-full sm:w-auto">
                     <Plus className="h-4 w-4" />
                     Add New Listing
                   </Button>
@@ -1173,7 +1161,7 @@ export default function ApplicationsPage() {
                     </div>
                     <h3 className="text-xl font-semibold mb-3 text-gray-900">No Listings Yet</h3>
                     <p className="text-gray-600 mb-6 max-w-md mx-auto">
-                      Start earning by listing your property. Share your space with others and 
+                      Start earning by listing your property. Share your space with others and
                       manage everything from this dashboard.
                     </p>
                     <Button onClick={() => router.push('/listroom')} size="lg">
@@ -1186,7 +1174,7 @@ export default function ApplicationsPage() {
                     {ownedListings.map((listing) => {
                       const mediaUrls = getMediaUrls(listing);
                       const firstImage = mediaUrls.length > 0 ? mediaUrls[0].url : null;
-                      
+
                       return (
                         <Card key={listing.id} className="border shadow-md hover:shadow-lg transition-all duration-300 overflow-hidden">
                           {/* Mobile: Stacked layout, Desktop: Side-by-side */}
@@ -1227,12 +1215,12 @@ export default function ApplicationsPage() {
                                     </div>
                                   </div>
                                 </div>
-                                
+
                                 {/* Action Buttons */}
                                 <div className="flex gap-2">
-                                  <Button 
-                                    variant="outline" 
-                                    size="sm" 
+                                  <Button
+                                    variant="outline"
+                                    size="sm"
                                     className="flex-1 text-xs"
                                     onClick={async () => {
                                       await trackListingView(listing.id);
@@ -1241,24 +1229,24 @@ export default function ApplicationsPage() {
                                   >
                                     View
                                   </Button>
-                                  <Button 
-                                    size="sm" 
+                                  <Button
+                                    size="sm"
                                     variant="outline"
                                     className="flex-1 text-xs"
                                     onClick={() => router.push(`/edit-listing/${listing.id}`)}
                                   >
                                     Edit
                                   </Button>
-                                  <Button 
-                                    size="sm" 
+                                  <Button
+                                    size="sm"
                                     variant="outline"
                                     className="flex-1 text-xs"
                                     onClick={() => router.push(`/applications/${listing.id}`)}
                                   >
                                     Manage
                                   </Button>
-                                  <Button 
-                                    size="sm" 
+                                  <Button
+                                    size="sm"
                                     variant="destructive"
                                     className="flex-1 text-xs"
                                     onClick={() => {
@@ -1271,10 +1259,10 @@ export default function ApplicationsPage() {
                                 </div>
                               </div>
                             </div>
-                            
+
                             {/* Right side - Payment status */}
                             <div className="w-full lg:w-1/2 p-4">
-                              <PaymentStatusCard 
+                              <PaymentStatusCard
                                 key={`${listing.id}-${refreshTrigger}`}
                                 listing={listing}
                                 onStatusUpdate={async () => {
@@ -1315,7 +1303,7 @@ export default function ApplicationsPage() {
                     </div>
                     <h3 className="text-xl font-semibold mb-3 text-gray-900">No Favorites Yet</h3>
                     <p className="text-gray-600 mb-6 max-w-md mx-auto">
-                      Start browsing properties and save the ones you like. 
+                      Start browsing properties and save the ones you like.
                       They'll appear here for easy access later.
                     </p>
                     <Button onClick={() => router.push('/search')} size="lg">
@@ -1328,7 +1316,7 @@ export default function ApplicationsPage() {
                     {likedListings.map((listing) => {
                       const mediaUrls = getMediaUrls(listing);
                       const firstImage = mediaUrls.length > 0 ? mediaUrls[0].url : null;
-                      
+
                       return (
                         <Card key={listing.id} className="border shadow-md hover:shadow-lg transition-all duration-300 overflow-hidden">
                           <div className="relative h-48">
@@ -1373,12 +1361,12 @@ export default function ApplicationsPage() {
                               {/* <Badge variant="outline" className="text-xs">
                                 {listing.room_type}
                               </Badge> */}
-                                                              <Button 
-                                  size="sm" 
-                                  variant="outline"
-                                  className="flex-1 text-xs sm:text-sm"
-                                  onClick={() => router.push(`/search?id=${listing.id}&view=detailed`)}
-                                >
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                className="flex-1 text-xs sm:text-sm"
+                                onClick={() => router.push(`/search?id=${listing.id}&view=detailed`)}
+                              >
                                 View Details
                               </Button>
                             </div>
@@ -1405,7 +1393,7 @@ export default function ApplicationsPage() {
                 Are you sure you want to withdraw your application? This action cannot be undone.
               </DialogDescription>
             </DialogHeader>
-            
+
             {selectedApplication && (
               <div className="space-y-4">
                 <div className="bg-gray-50 border rounded-lg p-4">
@@ -1418,7 +1406,7 @@ export default function ApplicationsPage() {
                     Current position: #{selectedApplication.position} in queue
                   </p>
                 </div>
-                
+
                 <div className="bg-red-50 border border-red-200 rounded-lg p-3">
                   <h4 className="font-medium text-red-800 mb-2">What happens when you withdraw:</h4>
                   <ul className="text-sm text-red-700 space-y-1">

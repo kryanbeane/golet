@@ -176,10 +176,11 @@ export const Navbar = () => {
                         <ChatNotificationBell />
                         <Button
                         variant="ghost"
+                        size="sm"
                         onClick={handleAuth}
                         className="justify-start"
                       >
-                        <HouseIcon className="h-5 w-5 mr-2" />
+                        <HouseIcon className="h-5 w-5" />
                   
                       </Button>
                       </div>
