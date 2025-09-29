@@ -74,7 +74,7 @@ export const Footer = () => {
             </a>
           </div>
 
-          <div>
+          {/* <div>
             <a
               rel="noreferrer noopener"
               href="#"
@@ -82,7 +82,7 @@ export const Footer = () => {
             >
               Desktop
             </a>
-          </div>
+          </div> */}
         </div>
 
         <div className="flex flex-col gap-2">

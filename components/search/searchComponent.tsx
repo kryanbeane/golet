@@ -861,10 +861,10 @@ export default function Component({
 
       {/* Mobile View Toggle */}
       <div className="lg:hidden border-b bg-white">
-        <div className="flex">
+        <div className="flex gap-2 p-2">
           <Button
             variant={viewMode === "list" ? "default" : "ghost"}
-            className="flex-1 rounded-none h-12"
+            className="flex-1 rounded-lg h-12"
             onClick={() => setViewMode("list")}
           >
             <List className="h-4 w-4 mr-2" />
@@ -872,7 +872,7 @@ export default function Component({
           </Button>
           <Button
             variant={viewMode === "map" ? "default" : "ghost"}
-            className="flex-1 rounded-none h-12"
+            className="flex-1 rounded-lg h-12"
             onClick={() => setViewMode("map")}
           >
             <Map className="h-4 w-4 mr-2" />
@@ -1308,13 +1308,18 @@ export default function Component({
       {/* Media Modal */}
       <Dialog open={mediaModal.isOpen} onOpenChange={closeMediaModal}>
         <DialogContent className="max-w-4xl w-full h-[90vh] p-0 bg-transparent border-0 shadow-none rounded-lg overflow-hidden">
-          <DialogTitle className="text-white bg-black/50 px-3 py-1 rounded absolute top-4 left-4 z-10">
-            Property Media - {mediaModal.currentIndex + 1} of {mediaModal.media.length}
-          </DialogTitle>
+          <DialogHeader className="sr-only">
+            <DialogTitle>
+              Property Media - {mediaModal.currentIndex + 1} of {mediaModal.media.length}
+            </DialogTitle>
+            <DialogDescription>
+              View property images and videos
+            </DialogDescription>
+          </DialogHeader>
 
-          <DialogDescription className="sr-only">
-            View property images and videos
-          </DialogDescription>
+          <div className="text-white bg-black/50 px-3 py-1 rounded absolute top-4 left-4 z-10 text-sm">
+            Property Media - {mediaModal.currentIndex + 1} of {mediaModal.media.length}
+          </div>
 
           <Button
             variant="ghost"

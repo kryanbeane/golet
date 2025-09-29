@@ -146,17 +146,18 @@ export const createApiClient = (supabase: SupabaseClient<Database>) => {
     }
 
     try {
+      // For signup email verification, we should use type 'signup' instead of 'email'
       const res = await supabase.auth.verifyOtp({
         email,
         token,
-        type: 'email'
+        type: 'signup'
       });
 
       if (res.error) {
         // Handle specific error cases with better messages
-        if (res.error.message.includes('Invalid OTP')) {
+        if (res.error.message.includes('Invalid OTP') || res.error.message.includes('invalid')) {
           throw new Error('Invalid verification code. Please check your email and try again.');
-        } else if (res.error.message.includes('Token expired')) {
+        } else if (res.error.message.includes('Token expired') || res.error.message.includes('expired')) {
           throw new Error('Verification code has expired. Please request a new one.');
         } else if (res.error.message.includes('Email not confirmed')) {
           throw new Error('Email not confirmed. Please check your email and click the confirmation link.');
@@ -202,7 +203,10 @@ export const createApiClient = (supabase: SupabaseClient<Database>) => {
         if (res.error.message.includes('Invalid login credentials')) {
           throw new Error('Invalid email or password. Please try again.');
         } else if (res.error.message.includes('Email not confirmed')) {
-          throw new Error('Please check your email and click the confirmation link to complete your registration.');
+          // Create a specific error for unconfirmed email that the UI can handle
+          const error = new Error('Please verify your email address to complete your registration.');
+          (error as any).code = 'email_not_confirmed';
+          throw error;
         } else {
           throw res.error;
         }
@@ -233,6 +237,50 @@ export const createApiClient = (supabase: SupabaseClient<Database>) => {
       return res.data;
     } catch (error) {
       console.error('Error in passwordReset:', error);
+      throw error;
+    }
+  };
+
+  const resendEmailVerification = async (email: string) => {
+    if (!email || typeof email !== 'string') {
+      throw new Error('Valid email is required for email verification');
+    }
+
+    try {
+      // For unverified users, we need to use signInWithOtp instead of resend
+      // This will send a new verification email without requiring authentication
+      const res = await supabase.auth.signInWithOtp({
+        email: email,
+        options: {
+          shouldCreateUser: false, // Don't create a new user
+          emailRedirectTo: getURL('/api/auth_callback')
+        }
+      });
+      
+      if (res.error) {
+        if (res.error.message.includes('User not found')) {
+          throw new Error('No account found with this email address.');
+        } else if (res.error.message.includes('Signup disabled')) {
+          // If signInWithOtp fails, try the resend method as fallback
+          const resendRes = await supabase.auth.resend({
+            type: 'signup',
+            email: email,
+            options: {
+              emailRedirectTo: getURL('/api/auth_callback')
+            }
+          });
+          
+          if (resendRes.error) {
+            throw resendRes.error;
+          }
+          return resendRes.data;
+        } else {
+          throw res.error;
+        }
+      }
+      return res.data;
+    } catch (error) {
+      console.error('Error in resendEmailVerification:', error);
       throw error;
     }
   };
@@ -985,6 +1033,7 @@ export const createApiClient = (supabase: SupabaseClient<Database>) => {
     passwordSignup,
     passwordReset,
     passwordUpdate,
+    resendEmailVerification,
     oauthSignin,
     signOut,
     createUserProfile,

@@ -213,12 +213,6 @@ export default function ChatRoom({ applicationId, listingName, applicantName, on
       setMessages(prev => [...prev, message])
       setNewMessage("")
 
-      toast({
-        title: "Message Sent",
-        description: "Your message has been sent successfully.",
-        variant: "default",
-      })
-
     } catch (error) {
       console.error('Error sending message:', error)
       toast({

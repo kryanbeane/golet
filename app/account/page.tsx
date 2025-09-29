@@ -26,18 +26,18 @@ import {
 } from '@/components/ui/dialog';
 import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
-import { 
-  AlertTriangle, 
-  Trash2, 
-  User as UserIcon, 
-  Building2, 
-  Heart, 
-  MapPin, 
-  Euro, 
-  Calendar, 
-  Clock, 
-  CheckCircle, 
-  XCircle, 
+import {
+  AlertTriangle,
+  Trash2,
+  User as UserIcon,
+  Building2,
+  Heart,
+  MapPin,
+  Euro,
+  Calendar,
+  Clock,
+  CheckCircle,
+  XCircle,
   Eye,
   Edit,
   Plus,
@@ -60,7 +60,7 @@ export default function AccountPage() {
   const { toast } = useToast();
   const router = useRouter();
   const { user, isLoading: isLoadingUser } = useAuth();
-  
+
   const [loading, setLoading] = useState(false);
   const [userProfile, setUserProfile] = useState<any>(null);
   const [isLoadingDashboard, setIsLoadingDashboard] = useState(true);
@@ -82,12 +82,12 @@ export default function AccountPage() {
         .select('*')
         .eq('id', userId)
         .single();
-      
+
       if (error) {
         console.error('Error fetching user profile:', error);
         return null;
       }
-      
+
       return profile;
     } catch (error) {
       console.error('Error fetching user profile:', error);
@@ -105,9 +105,9 @@ export default function AccountPage() {
       const applicationsPromise = api.getUserApplications(user)
         .then(result => result)
         .catch(() => ({ success: false, applications: [] }));
-        
+
       const ownedPromise = fetchOwnedListings(userId);
-      
+
       const likedPromise = api.getUserLikedListings(user)
         .then(result => result)
         .catch(() => ({ success: false, listings: [] }));
@@ -121,21 +121,21 @@ export default function AccountPage() {
       const [applicationsResult, ownedResult, likedResult] = await Promise.allSettled([
         Promise.race([
           applicationsPromise,
-          new Promise<{ success: false; applications: [] }>((_, reject) => 
+          new Promise<{ success: false; applications: [] }>((_, reject) =>
             setTimeout(() => reject({ success: false, applications: [] }), 8000)
           )
         ]).catch(() => ({ success: false, applications: [] })),
-        
+
         Promise.race([
           ownedPromise,
-          new Promise<{ success: false; listings: [] }>((_, reject) => 
+          new Promise<{ success: false; listings: [] }>((_, reject) =>
             setTimeout(() => reject({ success: false, listings: [] }), 8000)
           )
         ]).catch(() => ({ success: false, listings: [] })),
-        
+
         Promise.race([
           likedPromise,
-          new Promise<{ success: false; listings: [] }>((_, reject) => 
+          new Promise<{ success: false; listings: [] }>((_, reject) =>
             setTimeout(() => reject({ success: false, listings: [] }), 8000)
           )
         ]).catch(() => ({ success: false, listings: [] }))
@@ -182,7 +182,7 @@ export default function AccountPage() {
         .order('created_at', { ascending: false });
 
       if (error) throw error;
-      
+
       // Fetch owner information for each listing
       const listingsWithOwners = await Promise.all(
         (data || []).map(async (listing: any) => {
@@ -192,7 +192,7 @@ export default function AccountPage() {
               .select('id, full_name, verified')
               .eq('id', listing.user_id)
               .single();
-            
+
             return {
               ...listing,
               owner: ownerData || null
@@ -201,14 +201,14 @@ export default function AccountPage() {
           return listing;
         })
       );
-      
+
       return { success: true, listings: listingsWithOwners || [] };
     } catch (error) {
       console.error('Error fetching owned listings:', error);
       return { success: false, listings: [] };
     }
   };
-  
+
   useEffect(() => {
     if (!user) return;
 
@@ -222,9 +222,9 @@ export default function AccountPage() {
       .channel('realtime-listings')
       .on(
         'postgres_changes',
-        { 
-          event: 'INSERT', 
-          schema: 'public', 
+        {
+          event: 'INSERT',
+          schema: 'public',
           table: 'listings',
           filter: `user_id=eq.${user.id}`
         },
@@ -256,9 +256,9 @@ export default function AccountPage() {
     setActiveSection(sectionId);
     const element = document.getElementById(sectionId);
     if (element) {
-      element.scrollIntoView({ 
-        behavior: 'smooth', 
-        block: 'center' 
+      element.scrollIntoView({
+        behavior: 'smooth',
+        block: 'center'
       });
     }
   };
@@ -286,7 +286,7 @@ export default function AccountPage() {
 
   const handleDeleteAccount = async () => {
     if (!user) return;
-    
+
     // Validate email confirmation
     if (deleteEmail !== user.email) {
       toast({
@@ -308,7 +308,7 @@ export default function AccountPage() {
       });
 
       const responseData = await response.json();
-      
+
       if (!response.ok) {
         if (responseData.activeListings) {
           // Show specific message about active listings
@@ -337,12 +337,12 @@ export default function AccountPage() {
           description: 'Your account and all associated data have been permanently removed.',
         });
       }
-      
+
       // Reset loading state and close dialog before redirect
       setDeleteLoading(false);
       setDeleteDialogOpen(false);
       setDeleteEmail('');
-      
+
       // Sign out the user and redirect
       await api.signOut();
       router.push('/');
@@ -480,22 +480,20 @@ export default function AccountPage() {
                 <div className="space-y-1">
                   <button
                     onClick={() => scrollToSection('general')}
-                    className={`flex items-center space-x-3 w-full px-4 py-2.5 rounded-lg transition-all duration-200 ${
-                      activeSection === 'general' 
-                        ? 'bg-gradient-to-r from-primary/10 to-primary/5 text-primary border-l-4 border-primary' 
-                        : 'hover:bg-gray-100 text-gray-700'
-                    }`}
+                    className={`flex items-center space-x-3 w-full px-4 py-2.5 rounded-lg transition-all duration-200 ${activeSection === 'general'
+                      ? 'bg-gradient-to-r from-primary/10 to-primary/5 text-primary border-l-4 border-primary'
+                      : 'hover:bg-gray-100 text-gray-700'
+                      }`}
                   >
                     <UserCog className="h-4 w-4" />
                     <span className="font-medium">General</span>
                   </button>
                   <button
                     onClick={() => scrollToSection('profile')}
-                    className={`w-full text-left px-3 py-2 rounded-lg transition-all duration-200 flex items-center gap-2 ${
-                      activeSection === 'profile'
-                        ? 'bg-blue-600 text-white font-semibold shadow-md'
-                        : 'text-gray-600 hover:text-blue-600 hover:bg-blue-50'
-                    }`}
+                    className={`w-full text-left px-3 py-2 rounded-lg transition-all duration-200 flex items-center gap-2 ${activeSection === 'profile'
+                      ? 'bg-blue-600 text-white font-semibold shadow-md'
+                      : 'text-gray-600 hover:text-blue-600 hover:bg-blue-50'
+                      }`}
                   >
                     <UserIcon className="h-4 w-4" />
                     Profile
@@ -503,22 +501,20 @@ export default function AccountPage() {
                   <div className="border-t pt-2 mt-2">
                     <button
                       onClick={() => scrollToSection('signout')}
-                      className={`w-full text-left px-3 py-2 rounded-lg transition-all duration-200 flex items-center gap-2 ${
-                        activeSection === 'signout'
-                          ? 'bg-blue-600 text-white font-semibold shadow-md'
-                          : 'text-gray-600 hover:text-blue-600 hover:bg-blue-50'
-                      }`}
+                      className={`w-full text-left px-3 py-2 rounded-lg transition-all duration-200 flex items-center gap-2 ${activeSection === 'signout'
+                        ? 'bg-blue-600 text-white font-semibold shadow-md'
+                        : 'text-gray-600 hover:text-blue-600 hover:bg-blue-50'
+                        }`}
                     >
                       <ArrowRight className="h-4 w-4" />
                       Sign Out
                     </button>
                     <button
                       onClick={() => scrollToSection('delete')}
-                      className={`w-full text-left px-3 py-2 rounded-lg transition-all duration-200 flex items-center gap-2 ${
-                        activeSection === 'delete'
-                          ? 'bg-red-600 text-white font-semibold shadow-md'
-                          : 'text-red-600 hover:text-red-700 hover:bg-red-50'
-                      }`}
+                      className={`w-full text-left px-3 py-2 rounded-lg transition-all duration-200 flex items-center gap-2 ${activeSection === 'delete'
+                        ? 'bg-red-600 text-white font-semibold shadow-md'
+                        : 'text-red-600 hover:text-red-700 hover:bg-red-50'
+                        }`}
                     >
                       <Trash2 className="h-4 w-4" />
                       Delete Account
@@ -533,20 +529,20 @@ export default function AccountPage() {
           <div className="grid gap-4 sm:gap-6 lg:gap-8">
             {/* Mobile Header - Only visible on mobile */}
             <div className="grid gap-2 lg:hidden">
-                <h1 className="text-2xl sm:text-3xl font-bold bg-gradient-to-b from-primary/60 to-primary text-transparent bg-clip-text">
-                    Account Dashboard
-                </h1>
-                <p className="text-sm sm:text-base text-gray-600">Manage your account and property activity</p>
+              <h1 className="text-2xl sm:text-3xl font-bold bg-gradient-to-b from-primary/60 to-primary text-transparent bg-clip-text">
+                Account Dashboard
+              </h1>
+              <p className="text-sm sm:text-base text-gray-600">Manage your account and property activity</p>
             </div>
-            
+
             {/* Desktop Header - Hidden on mobile */}
             <div className="hidden lg:grid gap-2">
-                <h1 className="text-4xl font-bold bg-gradient-to-b from-primary/60 to-primary text-transparent bg-clip-text">
-                    Account Dashboard
-                </h1>
-                <p className="text-gray-600">Manage your account settings and view your property activity</p>
+              <h1 className="text-4xl font-bold bg-gradient-to-b from-primary/60 to-primary text-transparent bg-clip-text">
+                Account Dashboard
+              </h1>
+              <p className="text-gray-600">Manage your account settings and view your property activity</p>
             </div>
-            
+
             {/* Welcome Card */}
             <Card id="general" className="shadow-lg hover:shadow-xl transition-all duration-300 border-0 bg-gradient-to-br from-white to-gray-50/50">
               <CardHeader>
@@ -575,13 +571,13 @@ export default function AccountPage() {
             <Card id="overview" className="bg-white/80 backdrop-blur-sm border-0 shadow-xl">
               <CardHeader className="flex flex-row items-center justify-between">
                 <div>
-                    <CardTitle className="flex items-center gap-2 text-2xl">
+                  <CardTitle className="flex items-center gap-2 text-2xl">
                     <BarChart3 className="h-6 w-6 text-blue-600" />
                     Property Activity Overview
-                    </CardTitle>
-                    <CardDescription>
+                  </CardTitle>
+                  <CardDescription>
                     Your recent activity and property management at a glance
-                    </CardDescription>
+                  </CardDescription>
                 </div>
               </CardHeader>
               <CardContent>
@@ -594,70 +590,70 @@ export default function AccountPage() {
                   </div>
                 ) : (
                   <>
-                                          {/* Quick Stats - Light Gradients */}
-                      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 mb-6">
-                        <Card className="bg-gradient-to-br from-blue-50 to-blue-100 border border-blue-200 shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-[1.02]">
-                          <CardContent className="p-5 sm:p-6">
-                            <div className="flex items-center justify-between">
-                              <div className="space-y-1">
-                                <p className="text-blue-700 text-xs sm:text-sm font-medium">Applications</p>
-                                <p className="text-2xl sm:text-3xl font-bold text-blue-900">{applications.length}</p>
-                                <p className="text-blue-600 text-xs">
-                                  {applications.filter(a => a.status === 'pending').length} pending
-                                </p>
-                              </div>
-                              <div className="bg-blue-500/10 p-2.5 sm:p-3 rounded-full">
-                                <FileUser className="h-5 w-5 sm:h-6 sm:w-6 text-blue-600" />
-                              </div>
+                    {/* Quick Stats - Light Gradients */}
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 mb-6">
+                      <Card className="bg-gradient-to-br from-blue-50 to-blue-100 border border-blue-200 shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-[1.02]">
+                        <CardContent className="p-5 sm:p-6">
+                          <div className="flex items-center justify-between">
+                            <div className="space-y-1">
+                              <p className="text-blue-700 text-xs sm:text-sm font-medium">Applications</p>
+                              <p className="text-2xl sm:text-3xl font-bold text-blue-900">{applications.length}</p>
+                              <p className="text-blue-600 text-xs">
+                                {applications.filter(a => a.status === 'pending').length} pending
+                              </p>
                             </div>
-                          </CardContent>
-                        </Card>
-
-                        <Card className="bg-gradient-to-br from-purple-50 to-purple-100 border border-purple-200 shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-[1.02]">
-                          <CardContent className="p-5 sm:p-6">
-                            <div className="flex items-center justify-between">
-                              <div className="space-y-1">
-                                <p className="text-purple-700 text-xs sm:text-sm font-medium">My Listings</p>
-                                <p className="text-2xl sm:text-3xl font-bold text-purple-900">{ownedListings.length}</p>
-                                <p className="text-purple-600 text-xs">
-                                  {ownedListings.filter(l => l.active).length} active
-                                </p>
-                              </div>
-                              <div className="bg-purple-500/10 p-2.5 sm:p-3 rounded-full">
-                                <Building2 className="h-5 w-5 sm:h-6 sm:w-6 text-purple-600" />
-                              </div>
+                            <div className="bg-blue-500/10 p-2.5 sm:p-3 rounded-full">
+                              <FileUser className="h-5 w-5 sm:h-6 sm:w-6 text-blue-600" />
                             </div>
-                          </CardContent>
-                        </Card>
+                          </div>
+                        </CardContent>
+                      </Card>
 
-                        <Card className="bg-gradient-to-br from-red-50 to-pink-100 border border-red-200 shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-[1.02] sm:col-span-2 lg:col-span-1">
-                          <CardContent className="p-5 sm:p-6">
-                            <div className="flex items-center justify-between">
-                              <div className="space-y-1">
-                                <p className="text-red-700 text-xs sm:text-sm font-medium">Favorites</p>
-                                <p className="text-2xl sm:text-3xl font-bold text-red-900">{likedListings.length}</p>
-                                <p className="text-red-600 text-xs">Saved properties</p>
-                              </div>
-                              <div className="bg-red-500/10 p-2.5 sm:p-3 rounded-full">
-                                <Heart className="h-5 w-5 sm:h-6 sm:w-6 text-red-600" />
-                              </div>
+                      <Card className="bg-gradient-to-br from-purple-50 to-purple-100 border border-purple-200 shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-[1.02]">
+                        <CardContent className="p-5 sm:p-6">
+                          <div className="flex items-center justify-between">
+                            <div className="space-y-1">
+                              <p className="text-purple-700 text-xs sm:text-sm font-medium">My Listings</p>
+                              <p className="text-2xl sm:text-3xl font-bold text-purple-900">{ownedListings.length}</p>
+                              <p className="text-purple-600 text-xs">
+                                {ownedListings.filter(l => l.active).length} active
+                              </p>
                             </div>
-                          </CardContent>
-                        </Card>
-                      </div>
+                            <div className="bg-purple-500/10 p-2.5 sm:p-3 rounded-full">
+                              <Building2 className="h-5 w-5 sm:h-6 sm:w-6 text-purple-600" />
+                            </div>
+                          </div>
+                        </CardContent>
+                      </Card>
 
-            
+                      <Card className="bg-gradient-to-br from-red-50 to-pink-100 border border-red-200 shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-[1.02] sm:col-span-2 lg:col-span-1">
+                        <CardContent className="p-5 sm:p-6">
+                          <div className="flex items-center justify-between">
+                            <div className="space-y-1">
+                              <p className="text-red-700 text-xs sm:text-sm font-medium">Favorites</p>
+                              <p className="text-2xl sm:text-3xl font-bold text-red-900">{likedListings.length}</p>
+                              <p className="text-red-600 text-xs">Saved properties</p>
+                            </div>
+                            <div className="bg-red-500/10 p-2.5 sm:p-3 rounded-full">
+                              <Heart className="h-5 w-5 sm:h-6 sm:w-6 text-red-600" />
+                            </div>
+                          </div>
+                        </CardContent>
+                      </Card>
+                    </div>
+
+
                   </>
                 )}
               </CardContent>
-                             <CardFooter className="border-t px-6 py-4">
-               <Button onClick={() => router.push('/dashboard')}>
-                     <TrendingUp className="h-4 w-4 mr-2" />
-                     View Full Dashboard
-                 </Button>
-               </CardFooter>
+              <CardFooter className="border-t px-6 py-4">
+                <Button onClick={() => router.push('/dashboard')}>
+                  <TrendingUp className="h-4 w-4 mr-2" />
+                  View Full Dashboard
+                </Button>
+              </CardFooter>
             </Card>
-            
+
             {/* Profile Section */}
             <Card id="profile" className="shadow-lg hover:shadow-xl transition-all duration-300 border-0 bg-gradient-to-br from-white to-green-50/30">
               <CardHeader>

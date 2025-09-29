@@ -510,14 +510,35 @@ export default function ApplicationManagement({ listing }: ApplicationManagement
           </CardContent>
         </Card>
 
-        {/* Applications Tabs */}
+        {/* Applications Tabs - Responsive */}
         <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-          <TabsList className="grid w-full grid-cols-4">
+          {/* Desktop Tabs */}
+          <TabsList className="hidden md:grid w-full grid-cols-4">
             <TabsTrigger value="all">All ({getApplicationStats().total})</TabsTrigger>
             <TabsTrigger value="pending">Pending ({getApplicationStats().pending})</TabsTrigger>
             <TabsTrigger value="accepted">Accepted ({getApplicationStats().accepted})</TabsTrigger>
             <TabsTrigger value="rejected">Rejected ({getApplicationStats().rejected})</TabsTrigger>
           </TabsList>
+
+          {/* Mobile Dropdown */}
+          <Card className="md:hidden mb-6">
+            <CardContent className="p-4">
+              <div className="space-y-2">
+                <Label htmlFor="status-filter">Filter by Status</Label>
+                <Select value={activeTab} onValueChange={setActiveTab}>
+                  <SelectTrigger className="w-full">
+                    <SelectValue placeholder="Select status" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">All Applications ({getApplicationStats().total})</SelectItem>
+                    <SelectItem value="pending">Pending ({getApplicationStats().pending})</SelectItem>
+                    <SelectItem value="accepted">Accepted ({getApplicationStats().accepted})</SelectItem>
+                    <SelectItem value="rejected">Rejected ({getApplicationStats().rejected})</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            </CardContent>
+          </Card>
 
           <TabsContent value="all" className="space-y-4">
             <ApplicationsList

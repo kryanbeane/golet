@@ -11,7 +11,7 @@ import { Footer } from '@/components/landing/Footer';
 import { ScrollToTop } from '@/components/landing/ScrollToTop';
 import { AuthProvider } from '@/components/providers/AuthProvider';
 import { createClient } from '@/utils/supabase/server';
-import ChatTabs from '@/components/ChatTabs';
+import MobileChatInterface from '@/components/MobileChatInterface';
 import ServiceWorkerRegistration from '@/components/ServiceWorkerRegistration';
 import NotificationsWrapper from '@/components/NotificationsWrapper';
 
@@ -75,7 +75,7 @@ export default async function RootLayout({ children }: PropsWithChildren) {
               </main>
               <Footer />
               <ScrollToTop />
-              <ChatTabs />
+              <MobileChatInterface />
               <NotificationsWrapper />
               <Toaster />
               <ServiceWorkerRegistration />

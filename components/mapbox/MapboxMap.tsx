@@ -8,7 +8,7 @@ interface Property {
   id: string;
   lat: number;
   lng: number;
-  monthly_rent: number;
+  monthly_rent?: number | null;
 }
 
 interface MapboxMapProps {
@@ -212,16 +212,33 @@ export default function MapboxMap({ properties, selectedProperty, onSelect, onMa
     properties.forEach((property) => {
       const el = document.createElement("div");
       el.className = `mapbox-marker${selectedProperty && selectedProperty.id === property.id ? " selected" : ""}`;
-      el.innerText = `€${property.monthly_rent}`;
+      
+      // Safely handle monthly_rent that might be undefined/null
+      const rentText = property.monthly_rent && typeof property.monthly_rent === 'number' 
+        ? `€${property.monthly_rent}` 
+        : '€--';
+      el.innerText = rentText;
+      
       // @ts-ignore
       el.onclick = (e) => {
         e.stopPropagation();
-        onSelect(property);
+        // Ensure property has required fields before calling onSelect
+        if (property && property.id && typeof property.lat === 'number' && typeof property.lng === 'number') {
+          onSelect(property);
+        } else {
+          console.warn('Invalid property data:', property);
+        }
       };
-      const marker = new mapboxgl.Marker(el)
-        .setLngLat([property.lng, property.lat])
-        .addTo(map);
-      markersRef.current.push(marker);
+      // Ensure valid coordinates before creating marker
+      if (typeof property.lng === 'number' && typeof property.lat === 'number' && 
+          !isNaN(property.lng) && !isNaN(property.lat)) {
+        const marker = new mapboxgl.Marker(el)
+          .setLngLat([property.lng, property.lat])
+          .addTo(map);
+        markersRef.current.push(marker);
+      } else {
+        console.warn('Invalid coordinates for property:', property.id, property.lng, property.lat);
+      }
     });
   }, [properties, selectedProperty, onSelect]);
 

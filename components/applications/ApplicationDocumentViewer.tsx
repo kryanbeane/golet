@@ -70,26 +70,30 @@ export function ApplicationDocumentViewer({
     setLoadingDocuments(prev => new Set(prev).add(documentKey))
 
     try {
-      const supabase = createClient()
-      
-      // Download the file from storage
-      const { data, error } = await supabase.storage
-        .from('user-documents')
-        .download(`${applicantUserId}/${document.filename}`)
+      // Use the new API endpoint for downloading applicant documents
+      const response = await fetch(`/api/applications/${applicationId}/documents/${document.filename}`, {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      })
 
-      if (error) {
-        throw new Error(`Failed to access document: ${error.message}`)
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({ error: 'Download failed' }))
+        throw new Error(errorData.error || `HTTP ${response.status}`)
       }
 
-      let finalBlob = data
+      // Get the blob from the response
+      const blob = await response.blob()
+      let finalBlob = blob
       let finalFilename = document.originalFilename || document.customName
-      let finalMimeType = document.mimeType || 'application/octet-stream'
+      let finalMimeType = document.mimeType || blob.type || 'application/octet-stream'
 
       // Check if document is encrypted
       if (document.filename.endsWith('.enc')) {
         try {
           const decryption = new DocumentEncryption()
-          const decryptedData = await decryption.decryptDocument(data)
+          const decryptedData = await decryption.decryptDocument(blob)
           finalBlob = decryptedData.blob
           finalFilename = decryptedData.filename
           finalMimeType = decryptedData.mimeType
@@ -176,24 +180,24 @@ export function ApplicationDocumentViewer({
             return (
               <div
                 key={`${document.filename}-${index}`}
-                className="flex items-center justify-between p-4 border rounded-lg bg-white hover:bg-gray-50 transition-colors"
+                className="flex flex-col sm:flex-row sm:items-center gap-3 p-4 border rounded-lg bg-white hover:bg-gray-50 transition-colors"
               >
                 <div className="flex items-center gap-3 flex-1 min-w-0">
-                  <div className="bg-gray-100 p-2 rounded-lg">
+                  <div className="bg-gray-100 p-2 rounded-lg shrink-0">
                     <IconComponent className="h-5 w-5 text-gray-600" />
                   </div>
                   
                   <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-2 mb-1">
+                    <div className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-2 mb-1">
                       <h4 className="font-medium text-gray-900 truncate">
                         {document.customName}
                       </h4>
-                      <Badge variant="outline" className="text-xs shrink-0">
+                      <Badge variant="outline" className="text-xs shrink-0 w-fit">
                         {documentHelpers.getDocumentTypeLabel(document.documentType)}
                       </Badge>
                     </div>
                     
-                    <div className="flex items-center gap-4 text-sm text-gray-500">
+                    <div className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-4 text-sm text-gray-500">
                       {document.size && (
                         <span>{documentHelpers.formatFileSize(document.size)}</span>
                       )}
@@ -207,13 +211,13 @@ export function ApplicationDocumentViewer({
                   </div>
                 </div>
 
-                <div className="flex items-center gap-2 ml-4">
+                <div className="flex items-center gap-2 sm:ml-4 shrink-0">
                   <Button
                     variant="outline"
                     size="sm"
                     onClick={() => handleDocumentDownload(document)}
                     disabled={isLoading}
-                    className="flex items-center gap-1"
+                    className="flex items-center gap-1 w-full sm:w-auto"
                   >
                     {isLoading ? (
                       <Loader2 className="h-4 w-4 animate-spin" />

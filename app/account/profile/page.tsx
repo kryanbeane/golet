@@ -36,7 +36,7 @@ export default function ProfilePage() {
   const [showProfileCreation, setShowProfileCreation] = useState(false)
   const [isLoadingProfile, setIsLoadingProfile] = useState(true)
   const [showVerification, setShowVerification] = useState(false)
-  
+
   // Get user from AuthProvider context at the top level
   const { user } = useAuth()
 
@@ -69,18 +69,18 @@ export default function ProfilePage() {
     const searchParams = new URLSearchParams(window.location.search)
     const verification = searchParams.get('verification')
     const callbackUserId = searchParams.get('userId')
-    
+
     if (verification === 'success' && callbackUserId && user?.id === callbackUserId) {
       // Clear the URL parameters
       window.history.replaceState({}, document.title, window.location.pathname)
-      
+
       // Show success message
       toast({
         title: "Verification Complete!",
         description: "Your identity has been verified successfully. You now have a verified badge!",
         variant: "default",
       })
-      
+
       // Force update verification status in database
       updateVerificationStatus()
     }
@@ -89,16 +89,16 @@ export default function ProfilePage() {
   // Function to update verification status
   const updateVerificationStatus = async () => {
     if (!user?.id) return
-    
+
     try {
       const supabase = createClient()
-      
+
       // Update user verification status
       const { error } = await supabase
         .from('users')
         .update({ verified: true })
         .eq('id', user.id)
-      
+
       if (error) {
         console.error('Failed to update verification status:', error)
       } else {
@@ -114,7 +114,7 @@ export default function ProfilePage() {
   const fetchUserProfile = async () => {
     try {
       const supabase = createClient()
-      
+
       if (!user) {
         toast({
           title: "Authentication Required",
@@ -133,7 +133,7 @@ export default function ProfilePage() {
 
       if (error) {
         console.error('Error fetching profile:', error)
-        
+
         // If user doesn't have a profile, show notification and profile creation form
         if (error.code === 'PGRST116') { // No rows returned
           console.log('No profile found, showing profile creation form')
@@ -146,7 +146,7 @@ export default function ProfilePage() {
           setIsLoadingProfile(false)
           return
         }
-        
+
         toast({
           title: "Error",
           description: "Failed to load profile data.",
@@ -157,9 +157,9 @@ export default function ProfilePage() {
       }
 
       // Check if profile has meaningful data (not just empty/null values)
-      const hasProfileData = profile.first_name && profile.last_name && 
+      const hasProfileData = profile.first_name && profile.last_name &&
         (profile.phone || profile.bio || profile.occupation || profile.date_of_birth);
-      
+
       if (!hasProfileData) {
         console.log('Profile exists but has no meaningful data, showing profile creation form')
         toast({
@@ -173,7 +173,7 @@ export default function ProfilePage() {
       }
 
       setUserProfile(profile)
-      
+
       // Update form with current values
       form.reset({
         first_name: profile.first_name || "",
@@ -203,7 +203,7 @@ export default function ProfilePage() {
     setLoading(true)
     try {
       const supabase = createClient()
-      
+
       if (!user) {
         toast({
           title: "Authentication Required",
@@ -352,7 +352,7 @@ export default function ProfilePage() {
                 <h1 className="text-3xl font-bold">Complete Your Profile</h1>
               </div>
             </div>
-            
+
             {/* Profile Setup Notification */}
             <Card className="mb-6 border-blue-200 bg-blue-50">
               <CardContent className="p-4">
@@ -369,7 +369,7 @@ export default function ProfilePage() {
                 </div>
               </CardContent>
             </Card>
-            
+
             <AccountCreationForm
               onComplete={() => {
                 setShowProfileCreation(false)
@@ -392,26 +392,31 @@ export default function ProfilePage() {
         <div className="max-w-4xl mx-auto">
           {/* Header */}
           <div className="mb-8">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-4">
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => router.push('/account')}
-                  className="flex items-center gap-2"
-                >
-                  <ArrowLeft className="h-4 w-4" />
-                  Back to Account
-                </Button>
-                <div>
-                  <div className="flex items-center gap-3">
-                    <h1 className="text-3xl font-bold">Edit Profile</h1>
-                    <VerifiedBadge verified={userProfile?.verified || false} size="md" />
-                  </div>
-                  <p className="text-muted-foreground mt-2">Update your personal information and preferences</p>
+            {/* Back Button - Always on top on mobile */}
+            <div className="mb-4">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => router.push('/account')}
+                className="flex items-center gap-2"
+              >
+                <ArrowLeft className="h-4 w-4" />
+                Back to Account
+              </Button>
+            </div>
+
+            {/* Title and Actions - Responsive layout */}
+            <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
+              <div className="flex-1 min-w-0">
+                <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-3">
+                  <h1 className="text-2xl sm:text-3xl font-bold">Edit Profile</h1>
+                  <VerifiedBadge verified={userProfile?.verified || false} size="md" />
                 </div>
+                <p className="text-muted-foreground mt-2">Update your personal information and preferences</p>
               </div>
-              <div className="flex gap-3">
+
+              {/* Action Buttons */}
+              <div className="flex flex-col sm:flex-row gap-2 sm:gap-3 shrink-0">
                 {editing ? (
                   <>
                     <Button
@@ -421,6 +426,7 @@ export default function ProfilePage() {
                         fetchUserProfile() // Reset form to original values
                       }}
                       disabled={loading}
+                      className="w-full sm:w-auto"
                     >
                       <X className="h-4 w-4 mr-2" />
                       Cancel
@@ -428,13 +434,17 @@ export default function ProfilePage() {
                     <Button
                       onClick={form.handleSubmit(onSubmit)}
                       disabled={loading}
+                      className="w-full sm:w-auto"
                     >
                       <Save className="h-4 w-4 mr-2" />
                       {loading ? "Saving..." : "Save Changes"}
                     </Button>
                   </>
                 ) : (
-                  <Button onClick={() => setEditing(true)}>
+                  <Button
+                    onClick={() => setEditing(true)}
+                    className="w-full sm:w-auto"
+                  >
                     <Edit className="h-4 w-4 mr-2" />
                     Edit Profile
                   </Button>
@@ -564,8 +574,8 @@ export default function ProfilePage() {
 
                     <div className="space-y-2">
                       <Label htmlFor="gender">Gender</Label>
-                      <Select 
-                        value={form.watch("gender")} 
+                      <Select
+                        value={form.watch("gender")}
                         onValueChange={(value) => form.setValue("gender", value as any)}
                         disabled={!editing || loading}
                       >
@@ -584,8 +594,8 @@ export default function ProfilePage() {
 
                     <div className="space-y-2">
                       <Label htmlFor="marital_status">Marital Status</Label>
-                      <Select 
-                        value={form.watch("marital_status")} 
+                      <Select
+                        value={form.watch("marital_status")}
                         onValueChange={(value) => form.setValue("marital_status", value as any)}
                         disabled={!editing || loading}
                       >
@@ -744,7 +754,7 @@ export default function ProfilePage() {
                     </div>
                   </div>
                   {!userProfile?.verified && (
-                    <Button 
+                    <Button
                       onClick={() => setShowVerification(true)}
                       variant="outline"
                       size="sm"
