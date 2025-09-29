@@ -21,8 +21,7 @@ import {
   ShieldCheck
 } from "lucide-react"
 import { documentHelpers, DocumentType } from "@/schemas/documents"
-import { createClient } from "@/utils/supabase/client"
-import { DocumentEncryption } from "@/utils/encryption"
+
 
 interface SharedDocumentInfo {
   filename: string
@@ -70,63 +69,129 @@ export function ApplicationDocumentViewer({
     setLoadingDocuments(prev => new Set(prev).add(documentKey))
 
     try {
-      // Use the new API endpoint for downloading applicant documents
-      const response = await fetch(`/api/applications/${applicationId}/documents/${document.filename}`, {
+      // Use the API endpoint for downloading applicant documents
+      // The API will handle decryption and return the original file
+      const response = await fetch(`/api/applications/${applicationId}/documents/${encodeURIComponent(document.filename)}`, {
         method: 'GET',
-        headers: {
-          'Content-Type': 'application/json',
-        },
       })
 
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({ error: 'Download failed' }))
-        throw new Error(errorData.error || `HTTP ${response.status}`)
+        throw new Error(errorData.error || `HTTP ${response.status}: ${response.statusText}`)
       }
 
       // Get the blob from the response
-      const blob = await response.blob()
-      let finalBlob = blob
-      let finalFilename = document.originalFilename || document.customName
-      let finalMimeType = document.mimeType || blob.type || 'application/octet-stream'
+      let blob = await response.blob()
+      
+      // Check if the file is encrypted and needs client-side decryption
+      const isEncrypted = response.headers.get('X-Encrypted') === 'true'
+      const encryptionKey = response.headers.get('X-Encryption-Key')
+      const encryptionIV = response.headers.get('X-Encryption-IV')
+      const originalFilename = response.headers.get('X-Original-Filename')
+      const originalMimetype = response.headers.get('X-Original-Mimetype')
+      
 
-      // Check if document is encrypted
-      if (document.filename.endsWith('.enc')) {
-        try {
-          const decryption = new DocumentEncryption()
-          const decryptedData = await decryption.decryptDocument(blob)
-          finalBlob = decryptedData.blob
-          finalFilename = decryptedData.filename
-          finalMimeType = decryptedData.mimeType
-        } catch (decryptError) {
-          console.error('Decryption failed:', decryptError)
-          throw new Error('Failed to decrypt document')
+      
+      if (isEncrypted && encryptionKey && encryptionIV) {
+        // Check if Web Crypto API is available (requires HTTPS on mobile)
+        if (!window.crypto || !window.crypto.subtle) {
+          // Retry with server-side decryption for mobile devices
+          toast({
+            title: "Retrying Download",
+            description: "Using server-side decryption for mobile compatibility...",
+          })
+
+          const retryResponse = await fetch(`/api/applications/${applicationId}/documents/${encodeURIComponent(document.filename)}`, {
+            method: 'GET',
+            headers: {
+              'X-Force-Server-Decryption': 'true'
+            }
+          })
+
+          if (!retryResponse.ok) {
+            throw new Error('Server-side decryption failed')
+          }
+
+          blob = await retryResponse.blob()
+          
+          // Get filename from retry response
+          const retryContentDisposition = retryResponse.headers.get('Content-Disposition')
+          if (retryContentDisposition) {
+            const filenameMatch = retryContentDisposition.match(/filename="([^"]+)"/)
+            if (filenameMatch) {
+              filename = filenameMatch[1]
+            }
+          }
+
+          toast({
+            title: "Document Ready",
+            description: "Document has been prepared for download.",
+          })
+        } else {
+          try {
+            // Import the DocumentEncryption class
+            const { DocumentEncryption } = await import('@/utils/encryption')
+            
+            // Decrypt the file on the client side
+            const encryptedBuffer = await blob.arrayBuffer()
+            const iv = new Uint8Array(encryptionIV.split(',').map(Number))
+            
+            const decryptedBuffer = await DocumentEncryption.decryptFile(
+              encryptedBuffer,
+              encryptionKey,
+              iv
+            )
+            
+            // Create a new blob with the decrypted data and original mime type
+            blob = new Blob([decryptedBuffer], { type: originalMimetype || blob.type })
+            
+            toast({
+              title: "Document Decrypted",
+              description: "Document has been securely decrypted for download.",
+            })
+          } catch (decryptError) {
+            console.error('Client-side decryption failed:', decryptError)
+            
+            // Provide more helpful error message for crypto issues
+            if (decryptError.message.includes('crypto') || decryptError.message.includes('subtle')) {
+              throw new Error('Document decryption failed - please use HTTPS or try on desktop')
+            }
+            
+            throw new Error(`Failed to decrypt document: ${decryptError.message}`)
+          }
+        }
+      }
+      
+      // Get the filename from headers or use fallback
+      let filename = originalFilename || document.originalFilename || document.customName
+      
+      const contentDisposition = response.headers.get('Content-Disposition')
+      if (contentDisposition) {
+        const filenameMatch = contentDisposition.match(/filename="([^"]+)"/)
+        if (filenameMatch) {
+          filename = filenameMatch[1]
         }
       }
 
-      // Use a more robust download method that works in all contexts
-      if (typeof window !== 'undefined' && window.document) {
-        const url = URL.createObjectURL(finalBlob)
-        const link = window.document.createElement('a')
-        link.href = url
-        link.download = finalFilename
-        link.style.display = 'none'
-        
-        // Append to body, click, and remove
-        window.document.body.appendChild(link)
-        link.click()
-        window.document.body.removeChild(link)
-        
-        // Clean up the URL
-        setTimeout(() => URL.revokeObjectURL(url), 100)
+      // Create download link
+      const url = URL.createObjectURL(blob)
+      const link = window.document.createElement('a')
+      link.href = url
+      link.download = filename
+      link.style.display = 'none'
+      
+      // Append to body, click, and remove
+      window.document.body.appendChild(link)
+      link.click()
+      window.document.body.removeChild(link)
+      
+      // Clean up the URL
+      setTimeout(() => URL.revokeObjectURL(url), 100)
 
-        toast({
-          title: "Download Started",
-          description: `Downloading ${document.customName}`,
-          variant: "default",
-        })
-      } else {
-        throw new Error('Download not supported in this environment')
-      }
+      toast({
+        title: "Download Complete",
+        description: `Successfully downloaded ${document.customName}`,
+      })
 
     } catch (error) {
       console.error('Error downloading document:', error)

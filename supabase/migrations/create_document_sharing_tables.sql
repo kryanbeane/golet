@@ -18,6 +18,9 @@ END $$;
 -- Create index for better performance on shared_documents column
 CREATE INDEX IF NOT EXISTS idx_applications_shared_documents ON applications USING GIN (shared_documents);
 
+-- Drop existing function if it exists (to handle parameter name changes)
+DROP FUNCTION IF EXISTS can_access_shared_document(TEXT, UUID);
+
 -- Create a simple function to check if a user can access a shared document
 CREATE OR REPLACE FUNCTION can_access_shared_document(
     document_path TEXT,
