@@ -1,1 +1,3 @@
-
+# Loops API Key for email signup
+# Get your API key from https://app.loops.so/settings?page=api
+LOOPS_API_KEY=your_loops_api_key_here
