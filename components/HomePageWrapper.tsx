@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect } from "react"
+import { useEffect, Suspense } from "react"
 import { useSearchParams } from "next/navigation"
 import { useToast } from "@/components/ui/use-toast"
 import { About } from '@/components/landing/About'
@@ -17,7 +17,8 @@ interface HomePageWrapperProps {
   user: any
 }
 
-export function HomePageWrapper({ user }: HomePageWrapperProps) {
+// Component that uses useSearchParams - must be wrapped in Suspense
+function ToastHandler() {
   const { toast } = useToast()
   const searchParams = useSearchParams()
 
@@ -38,8 +39,16 @@ export function HomePageWrapper({ user }: HomePageWrapperProps) {
     }
   }, [searchParams, toast])
 
+  return null
+}
+
+export function HomePageWrapper({ user }: HomePageWrapperProps) {
   return (
     <>
+      {/* Wrap useSearchParams usage in Suspense boundary */}
+      <Suspense fallback={null}>
+        <ToastHandler />
+      </Suspense>
       <ProfileNotification />
       <Hero user={user} />
       <Features />

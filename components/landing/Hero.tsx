@@ -2,79 +2,67 @@
 import { Button } from '@/components/ui/button';
 import { Input } from "@/components/ui/input"
 import { User } from '@supabase/supabase-js';
-import { useRouter } from 'next/navigation';
-import { useState, useEffect } from 'react';
-import { createClient } from '@/utils/supabase/client';
-import { createApiClient } from '@/utils/supabase/api';
-import ProfileCompletionDialog from '@/components/misc/ProfileCompletionDialog';
-import { SearchFilters } from '@/components/search/AdvancedSearchFilters';
-import { parseNaturalLanguageQuery } from '@/components/search/AISearchLogic';
+import { useState } from 'react';
+import { useToast } from '@/components/ui/use-toast';
 
 export const Hero = ({ user }: { user: User | null }) => {
-  const router = useRouter();
-  const [showProfileDialog, setShowProfileDialog] = useState(false);
-  const [isCheckingProfile, setIsCheckingProfile] = useState(false);
-  const [searchQuery, setSearchQuery] = useState('');
+  const { toast } = useToast();
+  const [email, setEmail] = useState('');
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const handlePostRoom = async () => {
-    if (!user) {
-      router.push('/auth');
+  // Handle email signup submission
+  const handleEmailSignup = async (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    // Basic validation
+    if (!email.trim()) {
+      toast({
+        title: 'Email required',
+        description: 'Please enter your email address',
+        variant: 'destructive'
+      });
       return;
     }
 
-    setIsCheckingProfile(true);
-    
+    setIsSubmitting(true);
+
     try {
-      const supabase = createClient();
-      const api = createApiClient(supabase);
-      const { completed } = await api.checkProfileCompletion(user);
-      
-      if (completed) {
-        router.push('/listroom');
+      // Call the Loops API endpoint
+      const response = await fetch('/api/loops-signup', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ email }),
+      });
+
+      const data = await response.json();
+
+      if (response.ok && data.success) {
+        // Success - show positive message
+        toast({
+          title: 'Success!',
+          description: data.message || 'You\'ve been added to our waitlist',
+        });
+        // Clear the email input
+        setEmail('');
       } else {
-        setShowProfileDialog(true);
+        // Error from API
+        toast({
+          title: 'Oops!',
+          description: data.error || 'Something went wrong. Please try again.',
+          variant: 'destructive'
+        });
       }
     } catch (error) {
-      console.error('Error checking profile completion:', error);
-      // If there's an error, allow them to proceed to listroom page
-      // where they'll be redirected to profile completion if needed
-      router.push('/listroom');
+      console.error('Error submitting email:', error);
+      toast({
+        title: 'Error',
+        description: 'Failed to submit. Please check your connection and try again.',
+        variant: 'destructive'
+      });
     } finally {
-      setIsCheckingProfile(false);
-    }
-  };
-
-  const handleSearch = () => {
-    if (searchQuery.trim()) {
-      // Parse the natural language query into filters
-      const filters = parseNaturalLanguageQuery(searchQuery);
-      
-      // Build the search URL with query parameters
-      const params = new URLSearchParams();
-      params.set('q', searchQuery);
-      
-      // Add filter parameters
-      if (filters.county) params.set('county', filters.county);
-      if (filters.propertyType) params.set('propertyType', filters.propertyType);
-      if (filters.roomType) params.set('roomType', filters.roomType);
-      if (filters.minPrice) params.set('minPrice', filters.minPrice.toString());
-      if (filters.maxPrice) params.set('maxPrice', filters.maxPrice.toString());
-      if (filters.pets) params.set('pets', 'true');
-      if (filters.ensuite) params.set('ensuite', 'true');
-      if (filters.verifiedOnly) params.set('verifiedOnly', 'true');
-      
-      // Navigate to search page with parameters
-      const searchUrl = `/search?${params.toString()}`;
-      router.push(searchUrl);
-    } else {
-      // If no search query, just go to search page
-      router.push('/search');
-    }
-  };
-
-  const handleKeyPress = (e: React.KeyboardEvent) => {
-    if (e.key === 'Enter') {
-      handleSearch();
+      setIsSubmitting(false);
     }
   };
 
@@ -82,7 +70,7 @@ export const Hero = ({ user }: { user: User | null }) => {
     <section
       className="
         container grid lg:grid-cols-2 place-items-center py-20 md:py-32 gap-10
-        lg:bg-[url('/hero-bg.png')] lg:bg-contain lg:bg-no-repeat lg:bg-center
+        lg:bg-[url('/Hero-bg.png')] lg:bg-contain lg:bg-no-repeat lg:bg-center
       "
     >
       <div className="flex flex-col items-center text-center space-y-6 lg:items-start lg:text-start">
@@ -102,45 +90,35 @@ export const Hero = ({ user }: { user: User | null }) => {
         We can't fix the housing crisis, but we can make renting safer. Ireland's first rental platform with Scam and Deposit protection, in-app messaging, tenant profiles, and a fair queueing system.
         </p>
 
-        <div className="flex flex-col w-full max-w-lg gap-2 md:flex-row md:items-center md:justify-start">
-          {/* Search bar */}
-          <div className="w-full">
-            <Input 
-              type="text" 
-              placeholder="room, address, etc." 
-              className="w-full"
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              onKeyPress={handleKeyPress}
-            />
-          </div>
-          {/* Buttons row */}
-          <div className="flex flex-row w-full gap-2 justify-center md:w-auto md:justify-start">
-            <Button
-              type="button"
-              variant="outline"
-              className="w-full md:w-auto"
-              onClick={handleSearch}
-            >
-              Search
-            </Button>
-            <Button
-              variant="default"
-              className="w-full md:w-auto"
-              onClick={handlePostRoom}
-              disabled={isCheckingProfile}
-            >
-              {isCheckingProfile ? (
-                <>
-                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
-                  Checking...
-                </>
-              ) : (
-                'Post a Room'
-              )}
-            </Button>
-          </div>
-        </div>
+        {/* Email signup form */}
+        <form 
+          onSubmit={handleEmailSignup} 
+          className="flex flex-col w-full max-w-lg gap-2 md:flex-row md:items-center md:justify-start"
+        >
+          <Input 
+            type="email" 
+            placeholder="Enter your email address" 
+            className="w-full"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            disabled={isSubmitting}
+          />
+          <Button
+            type="submit"
+            variant="default"
+            className="w-full md:w-auto whitespace-nowrap"
+            disabled={isSubmitting}
+          >
+            {isSubmitting ? (
+              <>
+                <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+                Joining...
+              </>
+            ) : (
+              'Join Waitlist'
+            )}
+          </Button>
+        </form>
       </div>
 
       {/* Hero cards sections */}
@@ -150,13 +128,6 @@ export const Hero = ({ user }: { user: User | null }) => {
 
       {/* Shadow effect */}
       <div className="shadow"></div>
-      
-      {/* Profile Completion Dialog */}
-      <ProfileCompletionDialog
-        isOpen={showProfileDialog}
-        onClose={() => setShowProfileDialog(false)}
-        user={user}
-      />
     </section>
   );
 };

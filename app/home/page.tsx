@@ -6,6 +6,9 @@ import EnhancedSearchBar from '@/components/search/EnhancedSearchBar';
 import { SearchFilters } from '@/components/search/AdvancedSearchFilters';
 import HomeSearchWrapper from '@/components/HomeSearchWrapper';
 
+// Force dynamic rendering since this page uses cookies
+export const dynamic = 'force-dynamic';
+
 export default async function WelcomeCard() {
     const supabase = await createClient();
     

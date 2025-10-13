@@ -4,6 +4,9 @@ import { getUser } from '@/utils/supabase/queries';
 import EditListing from '@/components/EditListing';
 import ProfileNotification from '@/components/misc/ProfileNotification';
 
+// Force dynamic rendering since this page uses cookies
+export const dynamic = 'force-dynamic';
+
 interface EditListingPageProps {
   params: {
     id: string;
