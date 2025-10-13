@@ -193,14 +193,7 @@ export const Navbar = () => {
                         Sign Out
                       </Button>
                     </div>
-                  ) : (
-                    <Button
-                      variant="ghost"
-                      onClick={handleAuth}
-                    >
-                      Sign In
-                    </Button>
-                  )}
+                  ) : null}
                 </nav>
               </SheetContent>
             </Sheet>
@@ -243,14 +236,7 @@ export const Navbar = () => {
                   Sign Out
                 </Button>
               </div>
-            ) : (
-              <Button
-                onClick={handleAuth}
-                variant="ghost"
-              >
-                Sign In
-              </Button>
-            )}
+            ) : null}
             {/* <ModeToggle /> */}
           </div>
         </NavigationMenuList>
